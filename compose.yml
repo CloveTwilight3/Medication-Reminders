@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  medication-bot:
+    build: .
+    container_name: medication-reminder-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persist medication data
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - TZ=UTC  # Change to your timezone (e.g., America/New_York, Europe/London)

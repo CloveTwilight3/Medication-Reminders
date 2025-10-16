@@ -1,0 +1,32 @@
+{
+  "name": "medication-reminders",
+  "version": "1.0.0",
+  "description": "Medication reminder system with Discord bot",
+  "main": "dist/discord-bot/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/discord-bot/index.js",
+    "dev": "ts-node src/discord-bot/index.ts",
+    "watch": "tsc -w",
+    "bot": "npm run dev",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart"
+  },
+  "keywords": ["discord", "bot", "medication", "reminder", "health"],
+  "author": "Clove Twilight",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.4.7",
+    "node-schedule": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/node-schedule": "^2.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
