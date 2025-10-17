@@ -1,0 +1,30 @@
+name: Build Medication System
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "src/**"
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v5
+            
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                username: ${{ secrets.DOCKER_USERNAME }}
+                password: ${{ secrets.DOCKER_PASSWORD}}
+
+            - name: Push to Docker Image
+              uses: docker/build-push-action@v6
+              with:
+                context: .
+                file: ./Dockerfile
+                push: true
+                tags: clovetwilight3/medications:latest
+                no-cache: true
