@@ -1,15 +1,12 @@
-version: '3.8'
-
 services:
   medication-bot:
-    build: .
+    image: clovetwilight3/medications:latest
     container_name: medication-reminder-bot
     restart: unless-stopped
-    env_file:
-      - .env
     volumes:
       # Persist medication data
       - ./data:/app/data
     environment:
       - NODE_ENV=production
       - TZ=UTC  # Change to your timezone (e.g., America/New_York, Europe/London)
+      - DISCORD_TOKEN=your_discord_bot_token_here  # Replace with your actual token
