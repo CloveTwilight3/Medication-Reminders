@@ -36,16 +36,17 @@ export async function handleInteraction(
       }
     } catch (error) {
       console.error('Error handling command:', error);
-      
-      const errorMessage = {
-        content: '❌ An error occurred while processing your command.',
-        flags: MessageFlags.Ephemeral,
-      };
 
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(errorMessage);
+        await interaction.followUp({
+          content: '❌ An error occurred while processing your command.',
+          flags: MessageFlags.Ephemeral,
+        });
       } else {
-        await interaction.reply(errorMessage);
+        await interaction.reply({
+          content: '❌ An error occurred while processing your command.',
+          flags: MessageFlags.Ephemeral,
+        });
       }
     }
   }
@@ -56,16 +57,17 @@ export async function handleInteraction(
       await handleButtonInteraction(interaction);
     } catch (error) {
       console.error('Error handling button:', error);
-      
-      const errorMessage = {
-        content: '❌ An error occurred while processing your action.',
-        flags: MessageFlags.Ephemeral,
-      };
 
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(errorMessage);
+        await interaction.followUp({
+          content: '❌ An error occurred while processing your action.',
+          flags: MessageFlags.Ephemeral,
+        });
       } else {
-        await interaction.reply(errorMessage);
+        await interaction.reply({
+          content: '❌ An error occurred while processing your action.',
+          flags: MessageFlags.Ephemeral,
+        });
       }
     }
   }
