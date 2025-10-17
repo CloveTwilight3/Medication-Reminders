@@ -19,15 +19,17 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm install --omit=dev && \
-    npm install -g typescript ts-node
+# Install ALL dependencies (including dev dependencies for build)
+RUN npm install
 
 # Copy source code
 COPY src ./src
 
 # Build TypeScript
 RUN npm run build
+
+# Remove dev dependencies to reduce image size
+RUN npm prune --omit=dev
 
 # Create data directory for JSON storage
 RUN mkdir -p /app/data
