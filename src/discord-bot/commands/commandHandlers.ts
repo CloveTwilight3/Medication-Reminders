@@ -1,5 +1,5 @@
 // src/discord-bot/commands/commandHandlers.ts
-import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
 import { storage } from '../services/storage';
 
 export async function handleAddMed(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -10,7 +10,7 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
   if (!/^\d{2}:\d{2}$/.test(time)) {
     await interaction.reply({
       content: '❌ Invalid time format. Please use HH:MM (e.g., 09:00)',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -20,7 +20,7 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
     await interaction.reply({
       content: '❌ Invalid time. Hours must be 00-23 and minutes must be 00-59.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -34,7 +34,7 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
 
   await interaction.reply({
     content: `✅ Added medication reminder for **${medName}** at **${time}** daily.\n\n*You will receive DM reminders at this time each day.*`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
@@ -44,7 +44,7 @@ export async function handleListMeds(interaction: ChatInputCommandInteraction): 
   if (userMeds.length === 0) {
     await interaction.reply({
       content: '📭 You have no medications scheduled. Use `/addmed` to add one.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -60,7 +60,7 @@ export async function handleListMeds(interaction: ChatInputCommandInteraction): 
     .setFooter({ text: '✅ = Taken today | ⏳ = Not taken yet' })
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 export async function handleRemoveMed(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -71,14 +71,14 @@ export async function handleRemoveMed(interaction: ChatInputCommandInteraction):
   if (!success) {
     await interaction.reply({
       content: `❌ Medication **${medName}** not found.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   await interaction.reply({
     content: `✅ Removed medication **${medName}**.`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
@@ -115,5 +115,5 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
     })
     .setFooter({ text: 'Stay healthy! 💙' });
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

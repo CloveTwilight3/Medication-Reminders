@@ -1,5 +1,5 @@
 // src/discord-bot/handlers/interactionHandler.ts
-import { Client, Interaction, EmbedBuilder } from 'discord.js';
+import { Client, Interaction, EmbedBuilder, MessageFlags } from 'discord.js';
 import { storage } from '../services/storage';
 import {
   handleAddMed,
@@ -31,7 +31,7 @@ export async function handleInteraction(
         default:
           await interaction.reply({
             content: '❌ Unknown command',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
       }
     } catch (error) {
@@ -39,7 +39,7 @@ export async function handleInteraction(
       
       const errorMessage = {
         content: '❌ An error occurred while processing your command.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       };
 
       if (interaction.replied || interaction.deferred) {
@@ -59,7 +59,7 @@ export async function handleInteraction(
       
       const errorMessage = {
         content: '❌ An error occurred while processing your action.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       };
 
       if (interaction.replied || interaction.deferred) {
@@ -95,7 +95,7 @@ async function handleButtonInteraction(interaction: Interaction): Promise<void> 
     } else {
       await interaction.reply({
         content: '❌ Could not find this medication in your list.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   } else if (action === 'skip') {
