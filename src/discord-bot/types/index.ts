@@ -1,10 +1,3 @@
-export interface Medication{
-    name: string;
-    time: string; // Format "HH:MM"
-    taken: boolean;
-    reminderSent: boolean;
-}
-
-export interface UserMedications {
-    [userId: string]: Medication[];
-}
+// src/discord-bot/types/index.ts
+// Re-export types from API for consistency
+export type { Medication, ApiResponse } from '../../api/types';

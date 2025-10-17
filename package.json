@@ -1,29 +1,32 @@
 {
   "name": "medication-reminders",
   "version": "1.0.0",
-  "description": "Medication reminder system with Discord bot",
-  "main": "dist/discord-bot/index.js",
+  "description": "Medication reminder system with Discord bot and REST API",
+  "main": "dist/api/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/discord-bot/index.js",
-    "dev": "ts-node src/discord-bot/index.ts",
+    "start:api": "node dist/api/index.js",
+    "start:bot": "node dist/discord-bot/index.js",
+    "dev:api": "ts-node src/api/index.ts",
+    "dev:bot": "ts-node src/discord-bot/index.ts",
     "watch": "tsc -w",
-    "bot": "npm run dev",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
     "docker:restart": "docker-compose restart"
   },
-  "keywords": ["discord", "bot", "medication", "reminder", "health"],
+  "keywords": ["discord", "bot", "medication", "reminder", "health", "api", "rest"],
   "author": "Clove Twilight",
   "license": "MIT",
   "dependencies": {
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "node-schedule": "^2.1.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
     "@types/node-schedule": "^2.1.7",
     "ts-node": "^10.9.2",

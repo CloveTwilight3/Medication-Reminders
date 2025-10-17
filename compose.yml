@@ -1,12 +1,39 @@
 services:
-  medication-bot:
+  # API Service
+  medication-api:
     image: clovetwilight3/medications:latest
-    container_name: medication-reminder-bot
+    container_name: medication-api
     restart: unless-stopped
+    command: npm start:api
+    ports:
+      - "3000:3000"
     volumes:
-      # Persist medication data
       - ./data:/app/data
     environment:
       - NODE_ENV=production
-      - TZ=UTC  # Change to your timezone (e.g., America/New_York, Europe/London)
+      - API_PORT=3000
+      - TZ=UTC  # Change to your timezone
+    networks:
+      - medication-network
+
+  # Discord Bot Service
+  medication-bot:
+    image: clovetwilight3/medications:latest
+    container_name: medication-bot
+    restart: unless-stopped
+    command: npm start:bot
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - TZ=UTC  # Change to your timezone
       - DISCORD_TOKEN=your_discord_bot_token_here  # Replace with your actual token
+      - API_URL=http://medication-api:3000/api
+    depends_on:
+      - medication-api
+    networks:
+      - medication-network
+
+networks:
+  medication-network:
+    driver: bridge

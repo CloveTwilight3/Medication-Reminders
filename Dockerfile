@@ -37,5 +37,8 @@ RUN mkdir -p /app/data
 # Set volume for persistent data
 VOLUME ["/app/data"]
 
-# Run the bot
-CMD ["npm", "start"]
+# Expose API port
+EXPOSE 3000
+
+# Default command runs the bot (can be overridden in compose)
+CMD ["npm", "start:bot"]

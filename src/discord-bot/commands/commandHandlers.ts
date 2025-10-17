@@ -1,85 +1,76 @@
 // src/discord-bot/commands/commandHandlers.ts
 import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
-import { storage } from '../services/storage';
+import { apiClient } from '../services/apiClient';
 
 export async function handleAddMed(interaction: ChatInputCommandInteraction): Promise<void> {
   const medName = interaction.options.getString('name', true);
   const time = interaction.options.getString('time', true);
 
-  // Validate time format
-  if (!/^\d{2}:\d{2}$/.test(time)) {
+  try {
+    await apiClient.createMedication(interaction.user.id, medName, time);
+
     await interaction.reply({
-      content: '❌ Invalid time format. Please use HH:MM (e.g., 09:00)',
+      content: `✅ Added medication reminder for **${medName}** at **${time}** daily.\n\n*You will receive DM reminders at this time each day.*`,
       flags: MessageFlags.Ephemeral,
     });
-    return;
-  }
-
-  // Validate time range
-  const [hours, minutes] = time.split(':').map(Number);
-  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to add medication';
     await interaction.reply({
-      content: '❌ Invalid time. Hours must be 00-23 and minutes must be 00-59.',
+      content: `❌ ${errorMessage}`,
       flags: MessageFlags.Ephemeral,
     });
-    return;
   }
-
-  storage.addMedication(interaction.user.id, {
-    name: medName,
-    time: time,
-    taken: false,
-    reminderSent: false,
-  });
-
-  await interaction.reply({
-    content: `✅ Added medication reminder for **${medName}** at **${time}** daily.\n\n*You will receive DM reminders at this time each day.*`,
-    flags: MessageFlags.Ephemeral,
-  });
 }
 
 export async function handleListMeds(interaction: ChatInputCommandInteraction): Promise<void> {
-  const userMeds = storage.getUserMedications(interaction.user.id);
+  try {
+    const userMeds = await apiClient.getUserMedications(interaction.user.id);
 
-  if (userMeds.length === 0) {
+    if (userMeds.length === 0) {
+      await interaction.reply({
+        content: '📭 You have no medications scheduled. Use `/addmed` to add one.',
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865F2)
+      .setTitle('💊 Your Medications')
+      .setDescription(
+        userMeds
+          .map(med => `**${med.name}** - ${med.time} ${med.taken ? '✅' : '⏳'}`)
+          .join('\n')
+      )
+      .setFooter({ text: '✅ = Taken today | ⏳ = Not taken yet' })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  } catch (error) {
     await interaction.reply({
-      content: '📭 You have no medications scheduled. Use `/addmed` to add one.',
+      content: '❌ Failed to retrieve your medications.',
       flags: MessageFlags.Ephemeral,
     });
-    return;
   }
-
-  const embed = new EmbedBuilder()
-    .setColor(0x5865F2)
-    .setTitle('💊 Your Medications')
-    .setDescription(
-      userMeds
-        .map(med => `**${med.name}** - ${med.time} ${med.taken ? '✅' : '⏳'}`)
-        .join('\n')
-    )
-    .setFooter({ text: '✅ = Taken today | ⏳ = Not taken yet' })
-    .setTimestamp();
-
-  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 export async function handleRemoveMed(interaction: ChatInputCommandInteraction): Promise<void> {
   const medName = interaction.options.getString('name', true);
 
-  const success = storage.removeMedication(interaction.user.id, medName);
+  try {
+    await apiClient.deleteMedication(interaction.user.id, medName);
 
-  if (!success) {
     await interaction.reply({
-      content: `❌ Medication **${medName}** not found.`,
+      content: `✅ Removed medication **${medName}**.`,
       flags: MessageFlags.Ephemeral,
     });
-    return;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Medication not found';
+    await interaction.reply({
+      content: `❌ ${errorMessage}`,
+      flags: MessageFlags.Ephemeral,
+    });
   }
-
-  await interaction.reply({
-    content: `✅ Removed medication **${medName}**.`,
-    flags: MessageFlags.Ephemeral,
-  });
 }
 
 export async function handleHelp(interaction: ChatInputCommandInteraction): Promise<void> {

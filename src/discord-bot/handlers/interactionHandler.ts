@@ -1,12 +1,15 @@
 // src/discord-bot/handlers/interactionHandler.ts
 import { Client, Interaction, EmbedBuilder, MessageFlags } from 'discord.js';
-import { storage } from '../services/storage';
+import { apiClient } from '../services/apiClient';
 import {
   handleAddMed,
   handleListMeds,
   handleRemoveMed,
   handleHelp,
 } from '../commands/commandHandlers';
+
+// Store for pending reminders
+const pendingReminders = new Map<string, NodeJS.Timeout>();
 
 export async function handleInteraction(
   interaction: Interaction,
@@ -80,12 +83,12 @@ async function handleButtonInteraction(interaction: Interaction): Promise<void> 
   const [action, , medName] = interaction.customId.split('_');
 
   if (action === 'take') {
-    const success = storage.markMedicationTaken(userId, medName);
+    try {
+      await apiClient.markMedicationTaken(userId, medName);
 
-    if (success) {
       // Cancel pending follow-up reminder
       const reminderId = `${userId}-${medName}`;
-      storage.cancelPendingReminder(reminderId);
+      cancelPendingReminder(reminderId);
 
       const embed = new EmbedBuilder()
         .setColor(0x57F287)
@@ -94,7 +97,7 @@ async function handleButtonInteraction(interaction: Interaction): Promise<void> 
         .setTimestamp();
 
       await interaction.update({ embeds: [embed], components: [] });
-    } else {
+    } catch (error) {
       await interaction.reply({
         content: '❌ Could not find this medication in your list.',
         flags: MessageFlags.Ephemeral,
@@ -109,4 +112,19 @@ async function handleButtonInteraction(interaction: Interaction): Promise<void> 
 
     await interaction.update({ embeds: [embed], components: [] });
   }
+}
+
+// Export functions to manage pending reminders
+export function setPendingReminder(reminderId: string, timeout: NodeJS.Timeout): void {
+  pendingReminders.set(reminderId, timeout);
+}
+
+export function cancelPendingReminder(reminderId: string): boolean {
+  const timeout = pendingReminders.get(reminderId);
+  if (timeout) {
+    clearTimeout(timeout);
+    pendingReminders.delete(reminderId);
+    return true;
+  }
+  return false;
 }
