@@ -8,6 +8,23 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI!;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
+// Add interfaces for Discord API responses
+interface DiscordTokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_token: string;
+  scope: string;
+}
+
+interface DiscordUser {
+  id: string;
+  username: string;
+  discriminator: string;
+  avatar: string | null;
+  email?: string;
+}
+
 export class AuthController {
   // Generate Discord OAuth URL
   getDiscordAuthUrl(req: Request, res: Response, next: NextFunction): void {
@@ -56,7 +73,7 @@ export class AuthController {
         return;
       }
 
-      const tokenData = await tokenResponse.json();
+      const tokenData = await tokenResponse.json() as DiscordTokenResponse;
       const accessToken = tokenData.access_token;
 
       // Get user info from Discord
@@ -72,7 +89,7 @@ export class AuthController {
         return;
       }
 
-      const discordUser = await userResponse.json();
+      const discordUser = await userResponse.json() as DiscordUser;
       const discordId = discordUser.id;
 
       // Check if user exists, if not create one

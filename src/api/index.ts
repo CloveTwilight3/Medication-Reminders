@@ -1,14 +1,15 @@
 // src/api/index.ts
-import express, { Application } from 'express';
 import * as dotenv from 'dotenv';
+// Load environment variables FIRST before importing anything else
+dotenv.config();
+
+import express, { Application } from 'express';
 import * as path from 'path';
 import cookieParser from 'cookie-parser';
 import { errorHandler } from './middleware/errorHandler';
 import { medicationRouter } from './routes/medicationRoutes';
 import { userRouter } from './routes/userRoutes';
 import { authRouter } from './routes/authRoutes';
-
-dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.API_PORT || 3000;
@@ -62,6 +63,15 @@ app.listen(PORT, () => {
   console.log(`✅ API server running on port ${PORT}`);
   console.log(`📡 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 OAuth callback: ${process.env.DISCORD_REDIRECT_URI}`);
+  
+  // Debug: Check if env vars are loaded
+  if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
+    console.error('⚠️  WARNING: Discord credentials not found in environment variables!');
+    console.error('Make sure you have a .env file with DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET');
+  } else {
+    console.log(`✅ Discord OAuth configured`);
+  }
+  
   if (process.env.NODE_ENV === 'production') {
     console.log(`🌐 PWA available at: http://localhost:${PORT}`);
   }
