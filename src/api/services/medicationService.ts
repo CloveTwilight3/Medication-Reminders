@@ -15,7 +15,7 @@ export class MedicationService {
   }
 
   async createMedication(request: CreateMedicationRequest): Promise<Medication> {
-    const { userId, name, time } = request;
+    const { uid, name, time } = request;
 
     if (!name || !time) {
       throw new Error('Name and time are required');
@@ -25,64 +25,64 @@ export class MedicationService {
       throw new Error('Invalid time format. Use HH:MM (e.g., 09:00)');
     }
 
-    return this.storage.addMedication(userId, { name, time });
+    return this.storage.addMedication(uid, { name, time });
   }
 
-  async getUserMedications(userId: string): Promise<Medication[]> {
-    return this.storage.getUserMedications(userId);
+  async getUserMedications(uid: string): Promise<Medication[]> {
+    return this.storage.getUserMedications(uid);
   }
 
-  async getMedication(userId: string, medName: string): Promise<Medication | null> {
-    return this.storage.getMedication(userId, medName);
+  async getMedication(uid: string, medName: string): Promise<Medication | null> {
+    return this.storage.getMedication(uid, medName);
   }
 
   async updateMedication(
-    userId: string,
+    uid: string,
     medName: string,
     updates: UpdateMedicationRequest
   ): Promise<Medication | null> {
-    const medication = this.storage.updateMedication(userId, medName, updates);
+    const medication = this.storage.updateMedication(uid, medName, updates);
     if (!medication) {
       throw new Error('Medication not found');
     }
     return medication;
   }
 
-  async deleteMedication(userId: string, medName: string): Promise<boolean> {
-    const success = this.storage.removeMedication(userId, medName);
+  async deleteMedication(uid: string, medName: string): Promise<boolean> {
+    const success = this.storage.removeMedication(uid, medName);
     if (!success) {
       throw new Error('Medication not found');
     }
     return true;
   }
 
-  async markTaken(userId: string, medName: string): Promise<boolean> {
-    const success = this.storage.markMedicationTaken(userId, medName, true);
+  async markTaken(uid: string, medName: string): Promise<boolean> {
+    const success = this.storage.markMedicationTaken(uid, medName, true);
     if (!success) {
       throw new Error('Medication not found');
     }
     return true;
   }
 
-  async markNotTaken(userId: string, medName: string): Promise<boolean> {
-    const success = this.storage.markMedicationTaken(userId, medName, false);
+  async markNotTaken(uid: string, medName: string): Promise<boolean> {
+    const success = this.storage.markMedicationTaken(uid, medName, false);
     if (!success) {
       throw new Error('Medication not found');
     }
     return true;
   }
 
-  async getMedicationsDueNow(): Promise<{ userId: string; medication: Medication }[]> {
+  async getMedicationsDueNow(): Promise<{ uid: string; medication: Medication }[]> {
     const now = new Date();
     const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     
     const allMedications = this.storage.getAllUserMedications();
-    const dueNow: { userId: string; medication: Medication }[] = [];
+    const dueNow: { uid: string; medication: Medication }[] = [];
 
-    for (const [userId, medications] of Object.entries(allMedications)) {
-      for (const med of medications) {
+    for (const userMeds of allMedications) {
+      for (const med of userMeds.medications) {
         if (med.time === currentTime && !med.taken && !med.reminderSent) {
-          dueNow.push({ userId, medication: med });
+          dueNow.push({ uid: userMeds.uid, medication: med });
         }
       }
     }

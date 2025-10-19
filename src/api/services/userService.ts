@@ -105,7 +105,7 @@ export class UserService {
     return `uid_${randomBytes(8).toString('hex')}`;
   }
 
-  private generateLinkCode(): string {
+  private createLinkCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed ambiguous chars
     let code = '';
     for (let i = 0; i < 6; i++) {
