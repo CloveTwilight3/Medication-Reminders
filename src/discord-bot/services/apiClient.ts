@@ -1,5 +1,5 @@
 // src/discord-bot/services/apiClient.ts
-import { Medication, ApiResponse } from '../../api/types';
+import { Medication, ApiResponse, User } from '../../api/types';
 
 export class ApiClient {
   private baseUrl: string;
@@ -34,23 +34,83 @@ export class ApiClient {
     }
   }
 
-  // Get all medications for a user
-  async getUserMedications(userId: string): Promise<Medication[]> {
-    return this.request<Medication[]>(`/medications/${userId}`);
+  // ========== USER MANAGEMENT ==========
+
+  // Get or create user by Discord ID
+  async getOrCreateUser(discordId: string): Promise<User> {
+    try {
+      // Try to get existing user
+      const user = await this.request<User>(`/users/discord/${discordId}`);
+      return user;
+    } catch (error) {
+      // User doesn't exist, create one
+      return this.createUser(discordId);
+    }
+  }
+
+  // Create new user with Discord ID
+  async createUser(discordId: string): Promise<User> {
+    return this.request<User>('/users', {
+      method: 'POST',
+      body: JSON.stringify({
+        createdVia: 'discord',
+        discordId
+      }),
+    });
+  }
+
+  // Get user by Discord ID
+  async getUserByDiscordId(discordId: string): Promise<User> {
+    return this.request<User>(`/users/discord/${discordId}`);
+  }
+
+  // Get user by UID
+  async getUser(uid: string): Promise<User> {
+    return this.request<User>(`/users/${uid}`);
+  }
+
+  // Link Discord ID to existing UID (for /link command)
+  async linkDiscordToUser(uid: string, discordId: string): Promise<User> {
+    return this.request<User>(`/users/${uid}/link-discord`, {
+      method: 'POST',
+      body: JSON.stringify({ discordId }),
+    });
+  }
+
+  // Validate link code from PWA
+  async validateLinkCode(code: string): Promise<{ uid: string; user: User }> {
+    return this.request<{ uid: string; user: User }>('/users/validate-link-code', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  // Generate connect token for /webconnect
+  async generateConnectToken(uid: string): Promise<{ token: string }> {
+    return this.request<{ token: string }>(`/users/${uid}/generate-connect-token`, {
+      method: 'POST',
+    });
+  }
+
+  // ========== MEDICATION MANAGEMENT ==========
+
+  // Get all medications for a user (by UID)
+  async getUserMedications(uid: string): Promise<Medication[]> {
+    return this.request<Medication[]>(`/medications/${uid}`);
   }
 
   // Get specific medication
-  async getMedication(userId: string, medName: string): Promise<Medication> {
-    return this.request<Medication>(`/medications/${userId}/${encodeURIComponent(medName)}`);
+  async getMedication(uid: string, medName: string): Promise<Medication> {
+    return this.request<Medication>(`/medications/${uid}/${encodeURIComponent(medName)}`);
   }
 
   // Create new medication
   async createMedication(
-    userId: string,
+    uid: string,
     name: string,
     time: string
   ): Promise<Medication> {
-    return this.request<Medication>(`/medications/${userId}`, {
+    return this.request<Medication>(`/medications/${uid}`, {
       method: 'POST',
       body: JSON.stringify({ name, time }),
     });
@@ -58,12 +118,12 @@ export class ApiClient {
 
   // Update medication
   async updateMedication(
-    userId: string,
+    uid: string,
     medName: string,
     updates: Partial<Medication>
   ): Promise<Medication> {
     return this.request<Medication>(
-      `/medications/${userId}/${encodeURIComponent(medName)}`,
+      `/medications/${uid}/${encodeURIComponent(medName)}`,
       {
         method: 'PATCH',
         body: JSON.stringify(updates),
@@ -72,16 +132,16 @@ export class ApiClient {
   }
 
   // Delete medication
-  async deleteMedication(userId: string, medName: string): Promise<void> {
-    await this.request<void>(`/medications/${userId}/${encodeURIComponent(medName)}`, {
+  async deleteMedication(uid: string, medName: string): Promise<void> {
+    await this.request<void>(`/medications/${uid}/${encodeURIComponent(medName)}`, {
       method: 'DELETE',
     });
   }
 
   // Mark medication as taken
-  async markMedicationTaken(userId: string, medName: string): Promise<void> {
+  async markMedicationTaken(uid: string, medName: string): Promise<void> {
     await this.request<void>(
-      `/medications/${userId}/${encodeURIComponent(medName)}/taken`,
+      `/medications/${uid}/${encodeURIComponent(medName)}/taken`,
       {
         method: 'POST',
       }
@@ -89,9 +149,9 @@ export class ApiClient {
   }
 
   // Mark medication as not taken
-  async markMedicationNotTaken(userId: string, medName: string): Promise<void> {
+  async markMedicationNotTaken(uid: string, medName: string): Promise<void> {
     await this.request<void>(
-      `/medications/${userId}/${encodeURIComponent(medName)}/not-taken`,
+      `/medications/${uid}/${encodeURIComponent(medName)}/not-taken`,
       {
         method: 'POST',
       }
@@ -99,8 +159,8 @@ export class ApiClient {
   }
 
   // Get medications due now
-  async getMedicationsDueNow(): Promise<{ userId: string; medication: Medication }[]> {
-    return this.request<{ userId: string; medication: Medication }[]>('/medications/due');
+  async getMedicationsDueNow(): Promise<{ uid: string; medication: Medication }[]> {
+    return this.request<{ uid: string; medication: Medication }[]>('/medications/due');
   }
 
   // Reset daily medications

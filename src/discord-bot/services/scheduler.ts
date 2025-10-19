@@ -28,34 +28,51 @@ async function checkMedicationReminders(client: Client): Promise<void> {
   try {
     const dueMedications = await apiClient.getMedicationsDueNow();
 
-    for (const { userId, medication } of dueMedications) {
-      // Send initial reminder
-      await sendMedicationReminder(client, userId, medication);
-
-      // Mark reminder as sent via API
+    for (const { uid, medication } of dueMedications) {
+      // Get user info to find Discord ID
       try {
-        await apiClient.updateMedication(userId, medication.name, {
-          reminderSent: true
-        });
-      } catch (error) {
-        console.error(`Failed to update reminder status for ${medication.name}:`, error);
-      }
-
-      // Schedule follow-up reminder in 1 hour if not taken
-      const reminderId = `${userId}-${medication.name}`;
-      const timeout = setTimeout(async () => {
-        try {
-          // Check if medication has been taken
-          const currentMed = await apiClient.getMedication(userId, medication.name);
-          if (!currentMed.taken) {
-            await sendFollowUpReminder(client, userId, medication);
-          }
-        } catch (error) {
-          console.error(`Failed to send follow-up for ${medication.name}:`, error);
+        const user = await apiClient.getUser(uid);
+        
+        // Only send Discord reminders if user has linked Discord
+        if (!user.discordId) {
+          console.log(`User ${uid} has no Discord ID linked, skipping Discord reminder`);
+          // Mark reminder as sent so we don't keep trying
+          await apiClient.updateMedication(uid, medication.name, {
+            reminderSent: true
+          });
+          continue;
         }
-      }, 60 * 60 * 1000); // 1 hour
 
-      setPendingReminder(reminderId, timeout);
+        // Send initial reminder via Discord
+        await sendMedicationReminder(client, user.discordId, medication);
+
+        // Mark reminder as sent via API
+        try {
+          await apiClient.updateMedication(uid, medication.name, {
+            reminderSent: true
+          });
+        } catch (error) {
+          console.error(`Failed to update reminder status for ${medication.name}:`, error);
+        }
+
+        // Schedule follow-up reminder in 1 hour if not taken
+        const reminderId = `${uid}-${medication.name}`;
+        const timeout = setTimeout(async () => {
+          try {
+            // Check if medication has been taken
+            const currentMed = await apiClient.getMedication(uid, medication.name);
+            if (!currentMed.taken && user.discordId) {
+              await sendFollowUpReminder(client, user.discordId, medication);
+            }
+          } catch (error) {
+            console.error(`Failed to send follow-up for ${medication.name}:`, error);
+          }
+        }, 60 * 60 * 1000); // 1 hour
+
+        setPendingReminder(reminderId, timeout);
+      } catch (error) {
+        console.error(`Failed to get user info for uid ${uid}:`, error);
+      }
     }
   } catch (error) {
     console.error('❌ Error checking medication reminders:', error);

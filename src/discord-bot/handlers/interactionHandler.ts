@@ -5,6 +5,8 @@ import {
   handleAddMed,
   handleListMeds,
   handleRemoveMed,
+  handleWebConnect,
+  handleLink,
   handleHelp,
 } from '../commands/commandHandlers';
 
@@ -27,6 +29,12 @@ export async function handleInteraction(
           break;
         case 'removemed':
           await handleRemoveMed(interaction);
+          break;
+        case 'webconnect':
+          await handleWebConnect(interaction);
+          break;
+        case 'link':
+          await handleLink(interaction);
           break;
         case 'help':
           await handleHelp(interaction);
@@ -79,15 +87,19 @@ export async function handleInteraction(
 async function handleButtonInteraction(interaction: Interaction): Promise<void> {
   if (!interaction.isButton()) return;
 
-  const userId = interaction.user.id;
+  const discordId = interaction.user.id;
   const [action, , medName] = interaction.customId.split('_');
 
   if (action === 'take') {
     try {
-      await apiClient.markMedicationTaken(userId, medName);
+      // Get user by Discord ID
+      const user = await apiClient.getUserByDiscordId(discordId);
+
+      // Mark medication as taken
+      await apiClient.markMedicationTaken(user.uid, medName);
 
       // Cancel pending follow-up reminder
-      const reminderId = `${userId}-${medName}`;
+      const reminderId = `${user.uid}-${medName}`;
       cancelPendingReminder(reminderId);
 
       const embed = new EmbedBuilder()

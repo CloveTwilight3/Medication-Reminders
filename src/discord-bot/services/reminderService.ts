@@ -4,11 +4,11 @@ import { Medication } from '../types';
 
 export async function sendMedicationReminder(
   client: Client,
-  userId: string,
+  discordId: string,
   med: Medication
 ): Promise<void> {
   try {
-    const user = await client.users.fetch(userId);
+    const user = await client.users.fetch(discordId);
     
     const embed = new EmbedBuilder()
       .setColor(0x5865F2)
@@ -31,17 +31,17 @@ export async function sendMedicationReminder(
 
     await user.send({ embeds: [embed], components: [row] });
   } catch (err) {
-    console.error(`Failed to send reminder to user ${userId}:`, err);
+    console.error(`Failed to send reminder to Discord user ${discordId}:`, err);
   }
 }
 
 export async function sendFollowUpReminder(
   client: Client,
-  userId: string,
+  discordId: string,
   med: Medication
 ): Promise<void> {
   try {
-    const user = await client.users.fetch(userId);
+    const user = await client.users.fetch(discordId);
     
     const embed = new EmbedBuilder()
       .setColor(0xED4245)
@@ -64,6 +64,6 @@ export async function sendFollowUpReminder(
 
     await user.send({ embeds: [embed], components: [row] });
   } catch (err) {
-    console.error(`Failed to send follow-up to user ${userId}:`, err);
+    console.error(`Failed to send follow-up to Discord user ${discordId}:`, err);
   }
 }

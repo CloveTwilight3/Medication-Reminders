@@ -7,7 +7,11 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
   const time = interaction.options.getString('time', true);
 
   try {
-    await apiClient.createMedication(interaction.user.id, medName, time);
+    // Get or create user
+    const user = await apiClient.getOrCreateUser(interaction.user.id);
+
+    // Add medication
+    await apiClient.createMedication(user.uid, medName, time);
 
     await interaction.reply({
       content: `✅ Added medication reminder for **${medName}** at **${time}** daily.\n\n*You will receive DM reminders at this time each day.*`,
@@ -24,7 +28,11 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
 
 export async function handleListMeds(interaction: ChatInputCommandInteraction): Promise<void> {
   try {
-    const userMeds = await apiClient.getUserMedications(interaction.user.id);
+    // Get or create user
+    const user = await apiClient.getOrCreateUser(interaction.user.id);
+
+    // Get medications
+    const userMeds = await apiClient.getUserMedications(user.uid);
 
     if (userMeds.length === 0) {
       await interaction.reply({
@@ -58,7 +66,11 @@ export async function handleRemoveMed(interaction: ChatInputCommandInteraction):
   const medName = interaction.options.getString('name', true);
 
   try {
-    await apiClient.deleteMedication(interaction.user.id, medName);
+    // Get user
+    const user = await apiClient.getOrCreateUser(interaction.user.id);
+
+    // Remove medication
+    await apiClient.deleteMedication(user.uid, medName);
 
     await interaction.reply({
       content: `✅ Removed medication **${medName}**.`,
@@ -68,6 +80,95 @@ export async function handleRemoveMed(interaction: ChatInputCommandInteraction):
     const errorMessage = error instanceof Error ? error.message : 'Medication not found';
     await interaction.reply({
       content: `❌ ${errorMessage}`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+}
+
+export async function handleWebConnect(interaction: ChatInputCommandInteraction): Promise<void> {
+  try {
+    // Get or create user
+    const user = await apiClient.getOrCreateUser(interaction.user.id);
+
+    // Generate connect token
+    const { token } = await apiClient.generateConnectToken(user.uid);
+
+    // TODO: Replace with your actual PWA URL
+    const pwaUrl = process.env.PWA_URL || 'https://your-pwa-url.com';
+    const connectUrl = `${pwaUrl}/connect?token=${token}`;
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865F2)
+      .setTitle('🔗 Connect to Web App')
+      .setDescription(
+        `Click the link below to connect this Discord account to the web app:\n\n` +
+        `[**Open Web App**](${connectUrl})\n\n` +
+        `⏰ This link expires in 10 minutes.`
+      )
+      .setFooter({ text: 'Keep this link private!' })
+      .setTimestamp();
+
+    await interaction.reply({
+      embeds: [embed],
+      flags: MessageFlags.Ephemeral,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate connect link';
+    await interaction.reply({
+      content: `❌ ${errorMessage}`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+}
+
+export async function handleLink(interaction: ChatInputCommandInteraction): Promise<void> {
+  const code = interaction.options.getString('code', true).toUpperCase();
+
+  try {
+    // Validate the link code
+    const { uid, user } = await apiClient.validateLinkCode(code);
+
+    // Check if this Discord user is already linked
+    try {
+      const existingUser = await apiClient.getUserByDiscordId(interaction.user.id);
+      await interaction.reply({
+        content: `❌ Your Discord account is already linked to an account.\n\nIf you want to link to a different account, please contact support.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    } catch {
+      // User not found, proceed with linking
+    }
+
+    // Check if the UID already has a Discord account linked
+    if (user.discordId) {
+      await interaction.reply({
+        content: `❌ This link code is already connected to another Discord account.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    // Link Discord ID to the user
+    await apiClient.linkDiscordToUser(uid, interaction.user.id);
+
+    const embed = new EmbedBuilder()
+      .setColor(0x57F287)
+      .setTitle('✅ Account Linked Successfully!')
+      .setDescription(
+        `Your Discord account has been linked to your web app account.\n\n` +
+        `You can now manage your medications from both Discord and the web app!`
+      )
+      .setTimestamp();
+
+    await interaction.reply({
+      embeds: [embed],
+      flags: MessageFlags.Ephemeral,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Invalid or expired link code';
+    await interaction.reply({
+      content: `❌ ${errorMessage}\n\nLink codes expire after 10 minutes. Please generate a new one from the web app.`,
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -92,6 +193,14 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
         value: 'Remove a medication reminder\n*Example: `/removemed name:Aspirin`*',
       },
       {
+        name: '/webconnect',
+        value: 'Get a link to connect this Discord account to the web app',
+      },
+      {
+        name: '/link',
+        value: 'Link your Discord account using a code from the web app\n*Example: `/link code:ABC123`*',
+      },
+      {
         name: '/help',
         value: 'Show this help message',
       }
@@ -102,7 +211,8 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
         '• You\'ll receive DM reminders at your scheduled times\n' +
         '• Click the **✓ Taken** button once you take your medication\n' +
         '• If not marked as taken, you\'ll get a follow-up reminder after 1 hour\n' +
-        '• Status resets daily at midnight',
+        '• Status resets daily at midnight\n' +
+        '• Use the web app for a better experience on mobile/desktop',
     })
     .setFooter({ text: 'Stay healthy! 💙' });
 
