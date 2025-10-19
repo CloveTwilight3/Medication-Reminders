@@ -21,17 +21,26 @@ app.use(cookieParser());
 
 // CORS middleware (important for PWA)
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', FRONTEND_URL);
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-    return;
+  // In production, allow same origin (no CORS needed)
+  // In development, allow the dev server origin
+  const origin = req.headers.origin;
+  if (process.env.NODE_ENV === 'production') {
+    // Same origin - no CORS headers needed
+    next();
+  } else {
+    // Development mode
+    res.header('Access-Control-Allow-Origin', origin || FRONTEND_URL);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+      return;
+    }
+    
+    next();
   }
-  
-  next();
 });
 
 // Health check - MUST be before static files!
