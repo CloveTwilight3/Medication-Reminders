@@ -4,7 +4,7 @@ services:
     image: clovetwilight3/medications:latest
     container_name: medication-api
     restart: unless-stopped
-    command: npm start:api
+    command: npm run start:api
     ports:
       - "3000:3000"
     volumes:
@@ -21,7 +21,7 @@ services:
     image: clovetwilight3/medications:latest
     container_name: medication-bot
     restart: unless-stopped
-    command: npm start:bot
+    command: npm run start:bot
     volumes:
       - ./data:/app/data
     environment:
