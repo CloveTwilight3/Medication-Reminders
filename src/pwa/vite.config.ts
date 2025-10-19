@@ -57,7 +57,8 @@ export default defineConfig({
       }
     })
   ],
-  root: './src/pwa',
+  // Remove the root config - it's causing the issue
+  // The build is already running from src/pwa directory
   build: {
     outDir: '../../dist/pwa',
     emptyOutDir: true
