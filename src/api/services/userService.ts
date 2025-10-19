@@ -181,9 +181,9 @@ export class UserService {
     this.cleanExpiredCodes();
 
     // Generate unique code
-    let code = this.generateLinkCode();
+    let code = this.createLinkCode();
     while (this.linkCodes[code]) {
-      code = this.generateLinkCode();
+      code = this.createLinkCode();
     }
 
     // Code expires in 10 minutes
@@ -238,9 +238,20 @@ export class UserService {
     return token;
   }
 
-  // Validate connect token (same as validateLinkCode)
+  // Validate connect token (uses same mechanism as link codes)
   validateConnectToken(token: string): string | null {
-    return this.validateLinkCode(token);
+    this.cleanExpiredCodes();
+
+    const linkData = this.linkCodes[token];
+    if (!linkData) return null;
+
+    const uid = linkData.uid;
+
+    // Delete the token after use (one-time use)
+    delete this.linkCodes[token];
+    this.saveLinkCodes();
+
+    return uid;
   }
 
   // Delete user and all associated data
