@@ -11,24 +11,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load UID from localStorage on mount
-    const storedUid = localStorage.getItem('uid');
-    if (storedUid) {
-      loadUser(storedUid);
-    } else {
-      setIsLoading(false);
-    }
+    // Check if user has active session
+    checkSession();
   }, []);
 
-  const loadUser = async (userId: string) => {
+  const checkSession = async () => {
     try {
-      const userData = await api.getUser(userId);
+      const { uid: userId, user: userData } = await api.getCurrentUser();
       setUid(userId);
       setUserData(userData);
     } catch (error) {
-      console.error('Failed to load user:', error);
-      // Clear invalid UID
-      localStorage.removeItem('uid');
+      // No active session, user needs to login
       setUid(null);
       setUserData(null);
     } finally {
@@ -37,15 +30,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setUser = (userId: string, userData: User) => {
-    localStorage.setItem('uid', userId);
     setUid(userId);
     setUserData(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('uid');
-    setUid(null);
-    setUserData(null);
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUid(null);
+      setUserData(null);
+    }
   };
 
   return (

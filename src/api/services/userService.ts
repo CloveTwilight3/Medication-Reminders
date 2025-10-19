@@ -1,23 +1,23 @@
 // src/api/services/userService.ts
 import * as fs from 'fs';
 import * as path from 'path';
-import { User, LinkCode } from '../types';
+import { User, SessionToken } from '../types';
 import { randomBytes } from 'crypto';
 
 export class UserService {
   private usersPath: string;
-  private linkCodesPath: string;
+  private sessionsPath: string;
   private users: { [uid: string]: User } = {};
-  private linkCodes: { [code: string]: LinkCode } = {};
+  private sessions: { [token: string]: SessionToken } = {};
 
   constructor(dataPath?: string) {
     const baseDir = dataPath || path.join(process.cwd(), 'data');
     this.usersPath = path.join(baseDir, 'users.json');
-    this.linkCodesPath = path.join(baseDir, 'link-codes.json');
+    this.sessionsPath = path.join(baseDir, 'sessions.json');
     
     this.ensureDataDirectory();
     this.loadUsers();
-    this.loadLinkCodes();
+    this.loadSessions();
   }
 
   private ensureDataDirectory(): void {
@@ -56,62 +56,52 @@ export class UserService {
     }
   }
 
-  private loadLinkCodes(): void {
+  private loadSessions(): void {
     try {
-      if (fs.existsSync(this.linkCodesPath)) {
-        const data = fs.readFileSync(this.linkCodesPath, 'utf-8');
-        this.linkCodes = JSON.parse(data);
-        // Clean expired codes on load
-        this.cleanExpiredCodes();
+      if (fs.existsSync(this.sessionsPath)) {
+        const data = fs.readFileSync(this.sessionsPath, 'utf-8');
+        this.sessions = JSON.parse(data);
+        this.cleanExpiredSessions();
       } else {
-        this.linkCodes = {};
-        this.saveLinkCodes();
+        this.sessions = {};
+        this.saveSessions();
       }
     } catch (error) {
-      console.error('❌ Error loading link codes:', error);
-      this.linkCodes = {};
+      console.error('❌ Error loading sessions:', error);
+      this.sessions = {};
     }
   }
 
-  private saveLinkCodes(): void {
+  private saveSessions(): void {
     try {
       fs.writeFileSync(
-        this.linkCodesPath,
-        JSON.stringify(this.linkCodes, null, 2),
+        this.sessionsPath,
+        JSON.stringify(this.sessions, null, 2),
         'utf-8'
       );
     } catch (error) {
-      console.error('❌ Error saving link codes:', error);
+      console.error('❌ Error saving sessions:', error);
     }
   }
 
-  private cleanExpiredCodes(): void {
+  private cleanExpiredSessions(): void {
     const now = new Date();
     let changed = false;
 
-    for (const [code, data] of Object.entries(this.linkCodes)) {
+    for (const [token, data] of Object.entries(this.sessions)) {
       if (new Date(data.expiresAt) < now) {
-        delete this.linkCodes[code];
+        delete this.sessions[token];
         changed = true;
       }
     }
 
     if (changed) {
-      this.saveLinkCodes();
+      this.saveSessions();
     }
   }
 
   private generateUid(): string {
     return `uid_${randomBytes(8).toString('hex')}`;
-  }
-
-  private createLinkCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed ambiguous chars
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
   }
 
   // Create a new user
@@ -149,7 +139,6 @@ export class UserService {
     const user = this.users[uid];
     if (!user) return null;
 
-    // Check if Discord ID is already linked to another account
     const existingUser = this.getUserByDiscordId(discordId);
     if (existingUser && existingUser.uid !== uid) {
       throw new Error('Discord ID already linked to another account');
@@ -160,98 +149,45 @@ export class UserService {
     return user;
   }
 
-  // Unlink Discord from user
-  unlinkDiscord(uid: string): boolean {
-    const user = this.users[uid];
-    if (!user) return false;
-
-    user.discordId = null;
-    this.saveUsers();
-    return true;
-  }
-
-  // Generate a link code for PWA connection
-  generateLinkCode(uid: string): string {
+  // Generate session token
+  generateSessionToken(uid: string): string {
     const user = this.users[uid];
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Clean expired codes first
-    this.cleanExpiredCodes();
+    this.cleanExpiredSessions();
 
-    // Generate unique code
-    let code = this.createLinkCode();
-    while (this.linkCodes[code]) {
-      code = this.createLinkCode();
-    }
-
-    // Code expires in 10 minutes
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
-
-    this.linkCodes[code] = {
-      uid,
-      expiresAt
-    };
-
-    this.saveLinkCodes();
-    return code;
-  }
-
-  // Validate and consume a link code
-  validateLinkCode(code: string): string | null {
-    this.cleanExpiredCodes();
-
-    const linkData = this.linkCodes[code];
-    if (!linkData) return null;
-
-    const uid = linkData.uid;
-
-    // Delete the code after use (one-time use)
-    delete this.linkCodes[code];
-    this.saveLinkCodes();
-
-    return uid;
-  }
-
-  // Generate a one-time connect token for /webconnect
-  generateConnectToken(uid: string): string {
-    const user = this.users[uid];
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    // Generate cryptographically secure token
     const token = randomBytes(32).toString('hex');
-    
-    // Store as a link code with token as key
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
-    this.linkCodes[token] = {
+    this.sessions[token] = {
       uid,
       expiresAt
     };
 
-    this.saveLinkCodes();
+    this.saveSessions();
     return token;
   }
 
-  // Validate connect token (uses same mechanism as link codes)
-  validateConnectToken(token: string): string | null {
-    this.cleanExpiredCodes();
+  // Validate session token
+  validateSessionToken(token: string): string | null {
+    this.cleanExpiredSessions();
 
-    const linkData = this.linkCodes[token];
-    if (!linkData) return null;
+    const session = this.sessions[token];
+    if (!session) return null;
 
-    const uid = linkData.uid;
+    return session.uid;
+  }
 
-    // Delete the token after use (one-time use)
-    delete this.linkCodes[token];
-    this.saveLinkCodes();
+  // Revoke session token (logout)
+  revokeSessionToken(token: string): boolean {
+    if (!this.sessions[token]) return false;
 
-    return uid;
+    delete this.sessions[token];
+    this.saveSessions();
+    return true;
   }
 
   // Delete user and all associated data
@@ -259,7 +195,16 @@ export class UserService {
     if (!this.users[uid]) return false;
 
     delete this.users[uid];
+    
+    // Remove all sessions for this user
+    for (const [token, session] of Object.entries(this.sessions)) {
+      if (session.uid === uid) {
+        delete this.sessions[token];
+      }
+    }
+    
     this.saveUsers();
+    this.saveSessions();
     return true;
   }
 }

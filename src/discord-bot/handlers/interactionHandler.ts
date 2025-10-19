@@ -5,8 +5,6 @@ import {
   handleAddMed,
   handleListMeds,
   handleRemoveMed,
-  handleWebConnect,
-  handleLink,
   handleHelp,
 } from '../commands/commandHandlers';
 
@@ -29,12 +27,6 @@ export async function handleInteraction(
           break;
         case 'removemed':
           await handleRemoveMed(interaction);
-          break;
-        case 'webconnect':
-          await handleWebConnect(interaction);
-          break;
-        case 'link':
-          await handleLink(interaction);
           break;
         case 'help':
           await handleHelp(interaction);

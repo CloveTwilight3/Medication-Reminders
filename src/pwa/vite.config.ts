@@ -57,8 +57,15 @@ export default defineConfig({
       }
     })
   ],
-  // Remove the root config - it's causing the issue
-  // The build is already running from src/pwa directory
+  server: {
+    port: 3001, // Use 3001 for PWA dev server (API is on 3000)
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true
+      }
+    }
+  },
   build: {
     outDir: '../../dist/pwa',
     emptyOutDir: true

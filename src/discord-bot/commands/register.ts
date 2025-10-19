@@ -33,22 +33,6 @@ const commands = [
     ),
 
   new SlashCommandBuilder()
-    .setName('webconnect')
-    .setDescription('Get a link to connect this Discord account to the web app'),
-
-  new SlashCommandBuilder()
-    .setName('link')
-    .setDescription('Link your Discord account using a code from the web app')
-    .addStringOption(option =>
-      option
-        .setName('code')
-        .setDescription('6-character link code from the web app (e.g., ABC123)')
-        .setRequired(true)
-        .setMinLength(6)
-        .setMaxLength(6)
-    ),
-
-  new SlashCommandBuilder()
     .setName('help')
     .setDescription('Show help information about the medication bot'),
 ].map(command => command.toJSON());

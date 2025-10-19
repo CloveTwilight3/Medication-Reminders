@@ -4,7 +4,7 @@ import { userController } from '../controllers/userController';
 
 export const userRouter = Router();
 
-// Create new user
+// Create new user (kept for backwards compatibility, but OAuth handles this)
 userRouter.post('/', (req, res, next) => 
   userController.createUser(req, res, next)
 );
@@ -19,34 +19,9 @@ userRouter.get('/discord/:discordId', (req, res, next) =>
   userController.getUserByDiscordId(req, res, next)
 );
 
-// Link Discord to user
+// Link Discord to user (kept for manual linking if needed)
 userRouter.post('/:uid/link-discord', (req, res, next) => 
   userController.linkDiscord(req, res, next)
-);
-
-// Unlink Discord from user
-userRouter.post('/:uid/unlink-discord', (req, res, next) => 
-  userController.unlinkDiscord(req, res, next)
-);
-
-// Generate link code for PWA
-userRouter.post('/:uid/generate-link-code', (req, res, next) => 
-  userController.generateLinkCode(req, res, next)
-);
-
-// Validate link code
-userRouter.post('/validate-link-code', (req, res, next) => 
-  userController.validateLinkCode(req, res, next)
-);
-
-// Generate connect token (for /webconnect)
-userRouter.post('/:uid/generate-connect-token', (req, res, next) => 
-  userController.generateConnectToken(req, res, next)
-);
-
-// Validate connect token
-userRouter.post('/validate-connect-token', (req, res, next) => 
-  userController.validateConnectToken(req, res, next)
 );
 
 // Delete user

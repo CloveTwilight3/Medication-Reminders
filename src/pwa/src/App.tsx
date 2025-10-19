@@ -2,9 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider, useUser } from './contexts/UserContext';
 import Welcome from './pages/Welcome';
-import Connect from './pages/Connect';
 import Dashboard from './pages/Dashboard';
-import LinkDiscord from './pages/LinkDiscord';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { uid, isLoading } = useUser();
@@ -33,7 +31,6 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={uid ? <Navigate to="/dashboard" replace /> : <Welcome />} />
-      <Route path="/connect" element={<Connect />} />
       <Route
         path="/dashboard"
         element={
@@ -42,14 +39,8 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
-      <Route
-        path="/link-discord"
-        element={
-          <PrivateRoute>
-            <LinkDiscord />
-          </PrivateRoute>
-        }
-      />
+      {/* Redirect any unknown routes to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

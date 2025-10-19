@@ -10,6 +10,7 @@ class ApiClient {
   ): Promise<T> {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
+      credentials: 'include', // Important for cookies
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -25,35 +26,19 @@ class ApiClient {
     return data.data as T;
   }
 
-  // ========== USER MANAGEMENT ==========
+  // ========== AUTH ==========
 
-  async createUser(): Promise<User> {
-    return this.request<User>('/users', {
+  async getDiscordAuthUrl(): Promise<{ url: string }> {
+    return this.request<{ url: string }>('/auth/discord');
+  }
+
+  async getCurrentUser(): Promise<{ uid: string; user: User }> {
+    return this.request<{ uid: string; user: User }>('/auth/me');
+  }
+
+  async logout(): Promise<void> {
+    await this.request<void>('/auth/logout', {
       method: 'POST',
-      body: JSON.stringify({
-        createdVia: 'pwa'
-      }),
-    });
-  }
-
-  async getUser(uid: string): Promise<User> {
-    return this.request<User>(`/users/${uid}`);
-  }
-
-  async getUserByDiscordId(discordId: string): Promise<User> {
-    return this.request<User>(`/users/discord/${discordId}`);
-  }
-
-  async generateLinkCode(uid: string): Promise<{ code: string }> {
-    return this.request<{ code: string }>(`/users/${uid}/generate-link-code`, {
-      method: 'POST',
-    });
-  }
-
-  async validateConnectToken(token: string): Promise<{ uid: string; user: User }> {
-    return this.request<{ uid: string; user: User }>('/users/validate-connect-token', {
-      method: 'POST',
-      body: JSON.stringify({ token }),
     });
   }
 

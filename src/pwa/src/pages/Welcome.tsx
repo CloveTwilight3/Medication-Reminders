@@ -1,26 +1,22 @@
 // src/pwa/src/pages/Welcome.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Bell, Smartphone, Check } from 'lucide-react';
+import { Pill, Bell, Smartphone, Check, MessageCircle } from 'lucide-react';
 import { api } from '../services/api';
-import { useUser } from '../contexts/UserContext';
 
 export default function Welcome() {
   const navigate = useNavigate();
-  const { setUser } = useUser();
-  const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleGetStarted = async () => {
-    setIsCreating(true);
+  const handleDiscordLogin = async () => {
+    setIsLoading(true);
     try {
-      const user = await api.createUser();
-      setUser(user.uid, user);
-      navigate('/dashboard');
+      const { url } = await api.getDiscordAuthUrl();
+      window.location.href = url;
     } catch (error) {
-      console.error('Failed to create user:', error);
-      alert('Failed to create account. Please try again.');
-    } finally {
-      setIsCreating(false);
+      console.error('Failed to get Discord auth URL:', error);
+      alert('Failed to initiate Discord login. Please try again.');
+      setIsLoading(false);
     }
   };
 
@@ -56,13 +52,13 @@ export default function Welcome() {
 
           <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-              <Smartphone className="w-6 h-6 text-primary-600" />
+              <MessageCircle className="w-6 h-6 text-primary-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Works Everywhere
+              Discord Integration
             </h3>
             <p className="text-gray-600">
-              Use on your phone, desktop, or Discord. Your medications sync across all platforms.
+              Receive reminders directly in Discord DMs. Manage medications with simple commands.
             </p>
           </div>
 
@@ -82,28 +78,27 @@ export default function Welcome() {
         {/* CTA Section */}
         <div className="text-center">
           <button
-            onClick={handleGetStarted}
-            disabled={isCreating}
-            className="bg-primary-500 hover:bg-primary-600 text-white font-semibold px-12 py-4 rounded-full text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            onClick={handleDiscordLogin}
+            disabled={isLoading}
+            className="bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold px-12 py-4 rounded-full text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-3 mx-auto"
           >
-            {isCreating ? 'Creating Account...' : 'Get Started Free'}
+            <MessageCircle className="w-6 h-6" />
+            {isLoading ? 'Connecting to Discord...' : 'Login with Discord'}
           </button>
           <p className="text-gray-500 mt-4">
-            No signup required • Works offline • Free forever
+            Secure OAuth authentication • Free forever
           </p>
         </div>
 
-        {/* Connect Option */}
-        <div className="mt-16 text-center">
-          <p className="text-gray-600 mb-4">
-            Already using Discord bot?
-          </p>
-          <button
-            onClick={() => navigate('/connect')}
-            className="text-primary-600 hover:text-primary-700 font-medium underline"
-          >
-            Connect your Discord account
-          </button>
+        {/* Info Section */}
+        <div className="mt-16 text-center max-w-2xl mx-auto">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <h3 className="font-semibold text-blue-900 mb-2">Why Discord?</h3>
+            <p className="text-blue-800 text-sm">
+              We use Discord for secure authentication and to send you medication reminders directly in your DMs. 
+              You'll also be able to manage medications using Discord commands from anywhere.
+            </p>
+          </div>
         </div>
       </div>
     </div>

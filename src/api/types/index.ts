@@ -16,7 +16,7 @@ export interface User {
   createdVia: 'discord' | 'pwa';
 }
 
-export interface LinkCode {
+export interface SessionToken {
   uid: string;
   expiresAt: Date;
 }
@@ -64,13 +64,4 @@ export interface CreateUserRequest {
 
 export interface LinkDiscordRequest {
   discordId: string;
-}
-
-export interface LinkCodeRequest {
-  code: string;
-}
-
-export interface ConnectTokenResponse {
-  token: string;
-  expiresAt: Date;
 }

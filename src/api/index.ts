@@ -2,23 +2,28 @@
 import express, { Application } from 'express';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import cookieParser from 'cookie-parser';
 import { errorHandler } from './middleware/errorHandler';
 import { medicationRouter } from './routes/medicationRoutes';
 import { userRouter } from './routes/userRoutes';
+import { authRouter } from './routes/authRoutes';
 
 dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.API_PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 
 // CORS middleware (important for PWA)
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', FRONTEND_URL);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -45,6 +50,7 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/medications', medicationRouter);
 
@@ -55,6 +61,7 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`✅ API server running on port ${PORT}`);
   console.log(`📡 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔐 OAuth callback: ${process.env.DISCORD_REDIRECT_URI}`);
   if (process.env.NODE_ENV === 'production') {
     console.log(`🌐 PWA available at: http://localhost:${PORT}`);
   }
