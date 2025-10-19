@@ -34,26 +34,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve PWA static files in production
+// Health check - MUST be before static files!
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API routes - MUST be before static files!
+app.use('/api/auth', authRouter);
+app.use('/api/users', userRouter);
+app.use('/api/medications', medicationRouter);
+
+// Serve PWA static files in production - AFTER API routes!
 if (process.env.NODE_ENV === 'production') {
   const pwaPath = path.join(__dirname, '../pwa');
   app.use(express.static(pwaPath));
   
   // Serve PWA for any non-API routes (SPA fallback)
-  app.get(/^(?!\/api).*/, (req, res) => {
+  // This MUST be last!
+  app.get('*', (req, res) => {
     res.sendFile(path.join(pwaPath, 'index.html'));
   });
 }
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// API routes
-app.use('/api/auth', authRouter);
-app.use('/api/users', userRouter);
-app.use('/api/medications', medicationRouter);
 
 // Error handling
 app.use(errorHandler);
