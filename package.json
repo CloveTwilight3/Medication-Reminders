@@ -20,8 +20,7 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "docker:restart": "docker-compose restart",
-    "postinstall": "cd src/pwa && npm install"
+    "docker:restart": "docker-compose restart"
   },
   "keywords": ["discord", "bot", "medication", "reminder", "health", "api", "rest", "pwa"],
   "author": "Clove Twilight",

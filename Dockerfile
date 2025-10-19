@@ -15,15 +15,24 @@ RUN apt-get update && \
 # Set working directory
 WORKDIR /app
 
-# Copy package files for root and PWA
+# Copy package files for root
 COPY package*.json ./
 COPY tsconfig.json ./
+
+# Copy PWA package files
 COPY src/pwa/package*.json ./src/pwa/
+COPY src/pwa/tsconfig*.json ./src/pwa/
+COPY src/pwa/vite.config.ts ./src/pwa/
+COPY src/pwa/tailwind.config.js ./src/pwa/
+COPY src/pwa/postcss.config.js ./src/pwa/
 
-# Install ALL dependencies (including dev dependencies for build)
-RUN npm install
+# Install root dependencies
+RUN npm install --include=dev
 
-# Copy source code
+# Install PWA dependencies
+RUN cd src/pwa && npm install --include=dev
+
+# Copy all source code
 COPY src ./src
 
 # Build TypeScript (API + Bot)
@@ -33,7 +42,7 @@ RUN npm run build:api
 RUN npm run build:pwa
 
 # Remove dev dependencies to reduce image size
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev && cd src/pwa && npm prune --omit=dev
 
 # Create data directory for JSON storage
 RUN mkdir -p /app/data
