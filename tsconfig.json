@@ -12,6 +12,12 @@
     "resolveJsonModule": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/api/**/*",
+    "src/discord-bot/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/pwa"
+  ]
 }
