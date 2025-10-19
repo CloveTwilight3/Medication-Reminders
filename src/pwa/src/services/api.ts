@@ -1,7 +1,10 @@
 // src/pwa/src/services/api.ts
 import { User, Medication, ApiResponse } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Use relative URL so it works through nginx proxy
+// In development with vite proxy, this will proxy to localhost:3000
+// In production, this will use the same domain (www.cuddle-blahaj.win)
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ApiClient {
   private async request<T>(

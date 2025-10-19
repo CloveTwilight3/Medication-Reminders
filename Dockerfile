@@ -38,7 +38,9 @@ COPY src ./src
 # Build TypeScript (API + Bot)
 RUN npm run build:api
 
-# Build PWA
+# Build PWA with production API URL
+# The PWA will use relative URLs (/api) which works through nginx proxy
+ENV VITE_API_URL=/api
 RUN npm run build:pwa
 
 # Remove dev dependencies to reduce image size
