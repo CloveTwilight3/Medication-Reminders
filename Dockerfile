@@ -17,16 +17,19 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY tsconfig.json ./
 
 # Install ALL dependencies (including dev dependencies for build)
 RUN npm install
 
-# Copy source code
+# Copy source code and config files
+COPY tsconfig.json ./
 COPY src ./src
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript (API + Bot)
+RUN npm run build:api
+
+# Build PWA
+RUN npm run build:pwa
 
 # Remove dev dependencies to reduce image size
 RUN npm prune --omit=dev
@@ -40,5 +43,5 @@ VOLUME ["/app/data"]
 # Expose API port
 EXPOSE 3000
 
-# Default command runs the bot (can be overridden in compose)
-CMD ["npm", "start:bot"]
+# Default command runs the API (which also serves PWA in production)
+CMD ["npm", "run", "start:api"]

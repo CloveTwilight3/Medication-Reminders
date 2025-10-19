@@ -93,8 +93,8 @@ export async function handleWebConnect(interaction: ChatInputCommandInteraction)
     // Generate connect token
     const { token } = await apiClient.generateConnectToken(user.uid);
 
-    // TODO: Replace with your actual PWA URL
-    const pwaUrl = process.env.PWA_URL || 'https://your-pwa-url.com';
+    // Use PWA_URL if set, otherwise use API_URL base
+    const pwaUrl = process.env.PWA_URL || process.env.API_URL?.replace('/api', '') || 'http://localhost:3000';
     const connectUrl = `${pwaUrl}/connect?token=${token}`;
 
     const embed = new EmbedBuilder()

@@ -1,22 +1,29 @@
 {
   "name": "medication-reminders",
   "version": "1.0.0",
-  "description": "Medication reminder system with Discord bot and REST API",
+  "description": "Medication reminder system with Discord bot, REST API, and PWA",
   "main": "dist/api/index.js",
+  "workspaces": [
+    "src/pwa"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:api && npm run build:pwa",
+    "build:api": "tsc",
+    "build:pwa": "cd src/pwa && npm run build",
     "start:api": "node dist/api/index.js",
     "start:bot": "node dist/discord-bot/index.js",
     "dev:api": "ts-node src/api/index.ts",
     "dev:bot": "ts-node src/discord-bot/index.ts",
+    "dev:pwa": "cd src/pwa && npm run dev",
     "watch": "tsc -w",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "docker:restart": "docker-compose restart"
+    "docker:restart": "docker-compose restart",
+    "postinstall": "cd src/pwa && npm install"
   },
-  "keywords": ["discord", "bot", "medication", "reminder", "health", "api", "rest"],
+  "keywords": ["discord", "bot", "medication", "reminder", "health", "api", "rest", "pwa"],
   "author": "Clove Twilight",
   "license": "MIT",
   "dependencies": {

@@ -1,5 +1,5 @@
 services:
-  # API Service
+  # Combined API + PWA Service
   medication-api:
     image: clovetwilight3/medications:latest
     container_name: medication-api
@@ -13,6 +13,7 @@ services:
       - NODE_ENV=production
       - API_PORT=3000
       - TZ=UTC  # Change to your timezone
+      - PWA_URL=  # Leave empty to serve PWA from API
     networks:
       - medication-network
 
@@ -29,6 +30,7 @@ services:
       - TZ=UTC  # Change to your timezone
       - DISCORD_TOKEN=your_discord_bot_token_here  # Replace with your actual token
       - API_URL=http://medication-api:3000/api
+      - PWA_URL=http://medication-api:3000  # Or your custom domain
     depends_on:
       - medication-api
     networks:
