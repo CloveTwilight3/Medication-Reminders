@@ -15,14 +15,15 @@ RUN apt-get update && \
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files for root and PWA
 COPY package*.json ./
+COPY tsconfig.json ./
+COPY src/pwa/package*.json ./src/pwa/
 
 # Install ALL dependencies (including dev dependencies for build)
 RUN npm install
 
-# Copy source code and config files
-COPY tsconfig.json ./
+# Copy source code
 COPY src ./src
 
 # Build TypeScript (API + Bot)
