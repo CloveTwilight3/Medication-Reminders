@@ -10,12 +10,36 @@ services:
     volumes:
       - ./data:/app/data
     environment:
+      # Core Configuration
       - NODE_ENV=production
       - API_PORT=3000
-      - TZ=UTC  # Change to your timezone
-      - PWA_URL=  # Leave empty to serve PWA from API
+      - TZ=UTC  # Change to your timezone (e.g., America/New_York, Europe/London)
+      
+      # Discord OAuth2 Configuration
+      # Get these from https://discord.com/developers/applications
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI:-http://localhost:3000/api/auth/discord/callback}
+      
+      # Session Configuration
+      - SESSION_SECRET=${SESSION_SECRET}  # Generate a random string for production
+      
+      # Frontend URL (for CORS and redirects)
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      
+      # API URL (used by bot to communicate with API)
+      - API_URL=http://medication-api:3000/api
+      
+      # PWA URL (optional - leave empty to serve PWA from API)
+      - PWA_URL=
     networks:
       - medication-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Discord Bot Service
   medication-bot:
@@ -26,16 +50,29 @@ services:
     volumes:
       - ./data:/app/data
     environment:
+      # Core Configuration
       - NODE_ENV=production
       - TZ=UTC  # Change to your timezone
-      - DISCORD_TOKEN=your_discord_bot_token_here  # Replace with your actual token
+      
+      # Discord Bot Token
+      # Get this from https://discord.com/developers/applications
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      
+      # API Configuration (connects to the API service)
       - API_URL=http://medication-api:3000/api
-      - PWA_URL=http://medication-api:3000  # Or your custom domain
+      
+      # PWA URL (shown in bot help messages)
+      - PWA_URL=${PWA_URL:-http://localhost:3000}
     depends_on:
-      - medication-api
+      medication-api:
+        condition: service_healthy
     networks:
       - medication-network
 
 networks:
   medication-network:
     driver: bridge
+
+volumes:
+  data:
+    driver: local
