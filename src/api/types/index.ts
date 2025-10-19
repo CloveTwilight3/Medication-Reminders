@@ -9,8 +9,28 @@ export interface Medication {
   updatedAt?: Date;
 }
 
+export interface User {
+  uid: string;
+  discordId: string | null;
+  createdAt: Date;
+  createdVia: 'discord' | 'pwa';
+}
+
+export interface LinkCode {
+  uid: string;
+  expiresAt: Date;
+}
+
+export interface PushSubscription {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
 export interface UserMedications {
-  [userId: string]: Medication[];
+  [uid: string]: Medication[];
 }
 
 export interface ApiResponse<T = any> {
@@ -21,7 +41,7 @@ export interface ApiResponse<T = any> {
 }
 
 export interface CreateMedicationRequest {
-  userId: string;
+  uid: string;
   name: string;
   time: string;
 }
@@ -32,7 +52,25 @@ export interface UpdateMedicationRequest {
 }
 
 export interface MedicationQuery {
-  userId: string;
+  uid: string;
   date?: string;
   taken?: boolean;
+}
+
+export interface CreateUserRequest {
+  createdVia: 'discord' | 'pwa';
+  discordId?: string;
+}
+
+export interface LinkDiscordRequest {
+  discordId: string;
+}
+
+export interface LinkCodeRequest {
+  code: string;
+}
+
+export interface ConnectTokenResponse {
+  token: string;
+  expiresAt: Date;
 }

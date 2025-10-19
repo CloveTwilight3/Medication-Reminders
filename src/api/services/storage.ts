@@ -1,70 +1,72 @@
 // src/api/services/storage.ts
-import { UserMedications, Medication } from '../types';
+import { Medication } from '../types';
 import * as fs from 'fs';
 import * as path from 'path';
 
 export class StorageService {
-  private medications: UserMedications = {};
-  private dataPath: string;
+  private medicationsDir: string;
 
   constructor(dataPath?: string) {
-    this.dataPath = dataPath || path.join(process.cwd(), 'data', 'medications.json');
-    this.ensureDataDirectory();
-    this.loadFromFile();
+    const baseDir = dataPath || path.join(process.cwd(), 'data');
+    this.medicationsDir = path.join(baseDir, 'medications');
+    this.ensureMedicationsDirectory();
   }
 
-  private ensureDataDirectory(): void {
-    const dataDir = path.dirname(this.dataPath);
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+  private ensureMedicationsDirectory(): void {
+    if (!fs.existsSync(this.medicationsDir)) {
+      fs.mkdirSync(this.medicationsDir, { recursive: true });
+      console.log('✅ Created medications directory');
     }
   }
 
-  private loadFromFile(): void {
+  private getUserFilePath(uid: string): string {
+    return path.join(this.medicationsDir, `${uid}.json`);
+  }
+
+  private loadUserMedications(uid: string): Medication[] {
+    const filePath = this.getUserFilePath(uid);
+    
     try {
-      if (fs.existsSync(this.dataPath)) {
-        const data = fs.readFileSync(this.dataPath, 'utf-8');
-        this.medications = JSON.parse(data);
-        console.log('✅ Loaded medications from file');
-      } else {
-        console.log('📝 No existing data file, starting fresh');
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf-8');
+        return JSON.parse(data);
       }
+      return [];
     } catch (error) {
-      console.error('❌ Error loading medications:', error);
-      this.medications = {};
+      console.error(`❌ Error loading medications for ${uid}:`, error);
+      return [];
     }
   }
 
-  private saveToFile(): void {
+  private saveUserMedications(uid: string, medications: Medication[]): void {
+    const filePath = this.getUserFilePath(uid);
+    
     try {
       fs.writeFileSync(
-        this.dataPath,
-        JSON.stringify(this.medications, null, 2),
+        filePath,
+        JSON.stringify(medications, null, 2),
         'utf-8'
       );
     } catch (error) {
-      console.error('❌ Error saving medications:', error);
+      console.error(`❌ Error saving medications for ${uid}:`, error);
       throw new Error('Failed to save medications');
     }
   }
 
-  getUserMedications(userId: string): Medication[] {
-    return this.medications[userId] || [];
+  getUserMedications(uid: string): Medication[] {
+    return this.loadUserMedications(uid);
   }
 
-  getMedication(userId: string, medName: string): Medication | null {
-    const userMeds = this.medications[userId];
-    if (!userMeds) return null;
+  getMedication(uid: string, medName: string): Medication | null {
+    const userMeds = this.loadUserMedications(uid);
     return userMeds.find(m => m.name === medName) || null;
   }
 
-  addMedication(userId: string, medication: Omit<Medication, 'taken' | 'reminderSent'>): Medication {
-    if (!this.medications[userId]) {
-      this.medications[userId] = [];
-    }
+  addMedication(uid: string, medication: Omit<Medication, 'taken' | 'reminderSent'>): Medication {
+    const userMeds = this.loadUserMedications(uid);
 
     // Check for duplicates
-    const exists = this.medications[userId].some(m => m.name === medication.name);
+    const exists = userMeds.some(m => m.name === medication.name);
     if (exists) {
       throw new Error(`Medication "${medication.name}" already exists for this user`);
     }
@@ -77,73 +79,105 @@ export class StorageService {
       updatedAt: new Date()
     };
 
-    this.medications[userId].push(newMed);
-    this.saveToFile();
+    userMeds.push(newMed);
+    this.saveUserMedications(uid, userMeds);
     return newMed;
   }
 
-  updateMedication(userId: string, medName: string, updates: Partial<Medication>): Medication | null {
-    const userMeds = this.medications[userId];
-    if (!userMeds) return null;
-
+  updateMedication(uid: string, medName: string, updates: Partial<Medication>): Medication | null {
+    const userMeds = this.loadUserMedications(uid);
     const med = userMeds.find(m => m.name === medName);
+    
     if (!med) return null;
 
     Object.assign(med, { ...updates, updatedAt: new Date() });
-    this.saveToFile();
+    this.saveUserMedications(uid, userMeds);
     return med;
   }
 
-  removeMedication(userId: string, medName: string): boolean {
-    const userMeds = this.medications[userId];
-    if (!userMeds) return false;
-
+  removeMedication(uid: string, medName: string): boolean {
+    const userMeds = this.loadUserMedications(uid);
     const index = userMeds.findIndex(m => m.name === medName);
+    
     if (index === -1) return false;
 
     userMeds.splice(index, 1);
-    this.saveToFile();
+    this.saveUserMedications(uid, userMeds);
     return true;
   }
 
-  markMedicationTaken(userId: string, medName: string, taken: boolean = true): boolean {
-    const userMeds = this.medications[userId];
-    if (!userMeds) return false;
-
+  markMedicationTaken(uid: string, medName: string, taken: boolean = true): boolean {
+    const userMeds = this.loadUserMedications(uid);
     const med = userMeds.find(m => m.name === medName);
+    
     if (!med) return false;
 
     med.taken = taken;
     med.updatedAt = new Date();
-    this.saveToFile();
+    this.saveUserMedications(uid, userMeds);
     return true;
   }
 
-  getAllUserMedications(): UserMedications {
-    return this.medications;
+  getAllUserMedications(): { uid: string; medications: Medication[] }[] {
+    const result: { uid: string; medications: Medication[] }[] = [];
+
+    try {
+      const files = fs.readdirSync(this.medicationsDir);
+      
+      for (const file of files) {
+        if (file.endsWith('.json')) {
+          const uid = file.replace('.json', '');
+          const medications = this.loadUserMedications(uid);
+          result.push({ uid, medications });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error reading medications directory:', error);
+    }
+
+    return result;
   }
 
   resetDailyMedications(): void {
-    for (const medications of Object.values(this.medications)) {
+    const allUsers = this.getAllUserMedications();
+
+    for (const { uid, medications } of allUsers) {
       for (const med of medications) {
         med.taken = false;
         med.reminderSent = false;
         med.updatedAt = new Date();
       }
+      this.saveUserMedications(uid, medications);
     }
-    this.saveToFile();
-    console.log('✅ Daily medication status reset');
+
+    console.log('✅ Daily medication status reset for all users');
   }
 
   getAllUsers(): string[] {
-    return Object.keys(this.medications);
+    try {
+      const files = fs.readdirSync(this.medicationsDir);
+      return files
+        .filter(f => f.endsWith('.json'))
+        .map(f => f.replace('.json', ''));
+    } catch (error) {
+      console.error('❌ Error reading medications directory:', error);
+      return [];
+    }
   }
 
-  deleteUser(userId: string): boolean {
-    if (!this.medications[userId]) return false;
-    delete this.medications[userId];
-    this.saveToFile();
-    return true;
+  deleteUserMedications(uid: string): boolean {
+    const filePath = this.getUserFilePath(uid);
+    
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`❌ Error deleting medications for ${uid}:`, error);
+      return false;
+    }
   }
 }
 

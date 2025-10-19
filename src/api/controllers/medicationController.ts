@@ -6,8 +6,8 @@ import { ApiResponse } from '../types';
 export class MedicationController {
   async getUserMedications(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId } = req.params;
-      const medications = await medicationService.getUserMedications(userId);
+      const { uid } = req.params;
+      const medications = await medicationService.getUserMedications(uid);
       
       const response: ApiResponse = {
         success: true,
@@ -22,8 +22,8 @@ export class MedicationController {
 
   async getMedication(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId, medName } = req.params;
-      const medication = await medicationService.getMedication(userId, medName);
+      const { uid, medName } = req.params;
+      const medication = await medicationService.getMedication(uid, medName);
       
       if (!medication) {
         res.status(404).json({
@@ -46,11 +46,11 @@ export class MedicationController {
 
   async createMedication(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId } = req.params;
+      const { uid } = req.params;
       const { name, time } = req.body;
       
       const medication = await medicationService.createMedication({
-        userId,
+        uid,
         name,
         time
       });
@@ -69,10 +69,10 @@ export class MedicationController {
 
   async updateMedication(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId, medName } = req.params;
+      const { uid, medName } = req.params;
       const updates = req.body;
       
-      const medication = await medicationService.updateMedication(userId, medName, updates);
+      const medication = await medicationService.updateMedication(uid, medName, updates);
       
       const response: ApiResponse = {
         success: true,
@@ -88,8 +88,8 @@ export class MedicationController {
 
   async deleteMedication(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId, medName } = req.params;
-      await medicationService.deleteMedication(userId, medName);
+      const { uid, medName } = req.params;
+      await medicationService.deleteMedication(uid, medName);
       
       const response: ApiResponse = {
         success: true,
@@ -104,8 +104,8 @@ export class MedicationController {
 
   async markTaken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId, medName } = req.params;
-      await medicationService.markTaken(userId, medName);
+      const { uid, medName } = req.params;
+      await medicationService.markTaken(uid, medName);
       
       const response: ApiResponse = {
         success: true,
@@ -120,8 +120,8 @@ export class MedicationController {
 
   async markNotTaken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { userId, medName } = req.params;
-      await medicationService.markNotTaken(userId, medName);
+      const { uid, medName } = req.params;
+      await medicationService.markNotTaken(uid, medName);
       
       const response: ApiResponse = {
         success: true,
