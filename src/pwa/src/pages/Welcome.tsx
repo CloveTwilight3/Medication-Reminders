@@ -1,11 +1,9 @@
 // src/pwa/src/pages/Welcome.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Pill, Bell, Smartphone, Check, MessageCircle } from 'lucide-react';
+import { Pill, Bell, MessageCircle, Check } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Welcome() {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDiscordLogin = async () => {
