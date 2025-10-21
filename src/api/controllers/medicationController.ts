@@ -47,12 +47,16 @@ export class MedicationController {
   async createMedication(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { uid } = req.params;
-      const { name, time } = req.body;
+      const { name, time, frequency, dose, amount, instructions } = req.body;
       
       const medication = await medicationService.createMedication({
         uid,
         name,
-        time
+        time,
+        frequency,
+        dose,
+        amount,
+        instructions
       });
       
       const response: ApiResponse = {
