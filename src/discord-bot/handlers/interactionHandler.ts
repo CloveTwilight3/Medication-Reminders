@@ -44,6 +44,26 @@ export async function handleInteraction(
           });
       }
     } catch (error) {
+      console.error('Error handling command:', error);
+
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: '❌ An error occurred while processing your command.',
+          flags: MessageFlags.Ephemeral,
+        });
+      } else {
+        await interaction.reply({
+          content: '❌ An error occurred while processing your command.',
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    }
+  }
+
+  if (interaction.isButton()) {
+    try {
+      await handleButtonInteraction(interaction);
+    } catch (error) {
       console.error('Error handling button:', error);
 
       if (interaction.replied || interaction.deferred) {
@@ -111,24 +131,4 @@ export function cancelPendingReminder(reminderId: string): boolean {
     return true;
   }
   return false;
-} handling command:', error);
-
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({
-          content: '❌ An error occurred while processing your command.',
-          flags: MessageFlags.Ephemeral,
-        });
-      } else {
-        await interaction.reply({
-          content: '❌ An error occurred while processing your command.',
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-    }
-  }
-
-  if (interaction.isButton()) {
-    try {
-      await handleButtonInteraction(interaction);
-    } catch (error) {
-      console.error('Error
+}
