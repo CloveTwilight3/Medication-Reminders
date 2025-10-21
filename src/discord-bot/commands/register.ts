@@ -1,5 +1,5 @@
 // src/discord-bot/commands/register.ts
-import { Client, REST, Routes, SlashCommandBuilder } from 'discord.js';
+import { Client, REST, Routes, SlashCommandBuilder, ApplicationCommandType } from 'discord.js';
 
 const commands = [
   new SlashCommandBuilder()
@@ -47,11 +47,15 @@ const commands = [
         .setName('instructions')
         .setDescription('Special instructions (e.g., "Take with food") - Optional')
         .setRequired(false)
-    ),
+    )
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
 
   new SlashCommandBuilder()
     .setName('listmeds')
-    .setDescription('List all your scheduled medications'),
+    .setDescription('List all your scheduled medications')
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
 
   new SlashCommandBuilder()
     .setName('editmed')
@@ -98,7 +102,9 @@ const commands = [
         .setName('instructions')
         .setDescription('New instructions')
         .setRequired(false)
-    ),
+    )
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
 
   new SlashCommandBuilder()
     .setName('removemed')
@@ -108,7 +114,9 @@ const commands = [
         .setName('name')
         .setDescription('Name of the medication to remove')
         .setRequired(true)
-    ),
+    )
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
 
   new SlashCommandBuilder()
     .setName('timezone')
@@ -118,25 +126,35 @@ const commands = [
         .setName('timezone')
         .setDescription('Your timezone (e.g., America/New_York, Europe/London)')
         .setRequired(true)
-    ),
+    )
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
 
   new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Show help information about the medication bot'),
+    .setDescription('Show help information about the medication bot')
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
 ].map(command => command.toJSON());
 
 export async function registerCommands(client: Client): Promise<void> {
   try {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
 
-    console.log('Started refreshing application (/) commands.');
+    console.log('Started refreshing application (/) commands as USER commands.');
 
+    // Register as global commands
+    // The key changes are:
+    // 1. setDMPermission(true) - allows commands in DMs
+    // 2. setDefaultMemberPermissions(null) - removes server restrictions
+    // This makes them "user commands" that work everywhere for the user
     await rest.put(
       Routes.applicationCommands(client.user!.id),
       { body: commands }
     );
 
-    console.log('✅ Successfully registered application (/) commands.');
+    console.log('✅ Successfully registered application commands as USER commands.');
+    console.log('ℹ️  Commands are now available to users in DMs and servers.');
   } catch (error) {
     console.error('Error registering commands:', error);
   }
