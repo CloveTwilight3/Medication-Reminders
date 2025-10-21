@@ -12,16 +12,12 @@ export default function Dashboard() {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Add/Edit Modal States
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMed, setEditingMed] = useState<Medication | null>(null);
-  
-  // Settings Modal
   const [showSettings, setShowSettings] = useState(false);
   const [selectedTimezone, setSelectedTimezone] = useState(user?.timezone || 'UTC');
   
-  // Form States
   const [newMedName, setNewMedName] = useState('');
   const [newMedTime, setNewMedTime] = useState('');
   const [newMedFrequency, setNewMedFrequency] = useState<FrequencyType>('daily');
@@ -155,7 +151,7 @@ export default function Dashboard() {
       await api.updateSettings(selectedTimezone);
       alert('Timezone updated successfully!');
       setShowSettings(false);
-      window.location.reload(); // Reload to update user context
+      window.location.reload();
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to update settings');
     } finally {
@@ -175,17 +171,17 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-gray-800 shadow-lg border-b border-gray-700">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center shadow-lg">
               <Pill className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Medications</h1>
-              <p className="text-xs text-gray-500">
+              <h1 className="text-2xl font-bold text-white">Medications</h1>
+              <p className="text-xs text-gray-400">
                 {user?.discordId && 'Synced with Discord • '}
                 Timezone: {user?.timezone || 'UTC'}
               </p>
@@ -194,14 +190,14 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSettings(true)}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors border border-gray-700 hover:border-gray-600"
             >
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Settings</span>
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors border border-gray-700 hover:border-gray-600"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Logout</span>
@@ -213,14 +209,14 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Discord Integration Info */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center gap-3">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+        <div className="bg-green-900/30 border border-green-600 rounded-lg p-4 mb-6 flex items-center gap-3">
+          <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-green-800 text-sm font-medium">
+            <p className="text-green-300 text-sm font-medium">
               Discord Connected • V2 Features Active
             </p>
-            <p className="text-green-700 text-xs mt-1">
-              Use <code className="bg-green-100 px-1 rounded">/addmed</code>, <code className="bg-green-100 px-1 rounded">/editmed</code>, <code className="bg-green-100 px-1 rounded">/timezone</code> commands in Discord.
+            <p className="text-green-400 text-xs mt-1">
+              Use <code className="bg-green-900/50 px-1 rounded">/addmed</code>, <code className="bg-green-900/50 px-1 rounded">/editmed</code>, <code className="bg-green-900/50 px-1 rounded">/timezone</code> commands in Discord.
             </p>
           </div>
         </div>
@@ -229,7 +225,7 @@ export default function Dashboard() {
         <div className="mb-6">
           <button
             onClick={() => setShowAddModal(true)}
-            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 shadow-xl hover:shadow-primary-500/50 transition-all border border-primary-500"
           >
             <Plus className="w-5 h-5" />
             Add Medication
@@ -240,16 +236,16 @@ export default function Dashboard() {
         {isLoading ? (
           <div className="text-center py-12">
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading medications...</p>
+            <p className="text-gray-400">Loading medications...</p>
           </div>
         ) : medications.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <Pill className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No medications yet</h3>
-            <p className="text-gray-600 mb-6">Add your first medication to get started with reminders</p>
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-xl p-12 text-center">
+            <Pill className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">No medications yet</h3>
+            <p className="text-gray-400 mb-6">Add your first medication to get started with reminders</p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
               Add Medication
             </button>
@@ -259,7 +255,7 @@ export default function Dashboard() {
             {medications.map((med) => (
               <div
                 key={med.name}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-4"
+                className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg hover:shadow-xl hover:border-gray-600 transition-all p-4"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
@@ -267,40 +263,40 @@ export default function Dashboard() {
                       onClick={() => handleToggleTaken(med)}
                       className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
                         med.taken
-                          ? 'bg-green-500 border-green-500'
-                          : 'border-gray-300 hover:border-primary-500'
+                          ? 'bg-green-600 border-green-500'
+                          : 'border-gray-600 hover:border-primary-500'
                       }`}
                     >
                       {med.taken && <Check className="w-4 h-4 text-white" />}
                     </button>
                     <div className="flex-1">
-                      <h3 className={`font-semibold text-lg ${med.taken ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                      <h3 className={`font-semibold text-lg ${med.taken ? 'text-gray-500 line-through' : 'text-white'}`}>
                         {med.name}
                       </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-600">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-400">
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           {med.time}
                         </span>
-                        <span className="font-medium text-primary-600">
+                        <span className="font-medium text-primary-400">
                           {getFrequencyLabel(med.frequency)}
                         </span>
                       </div>
                       {(med.dose || med.amount || med.instructions) && (
                         <div className="mt-2 space-y-1 text-sm">
                           {med.dose && (
-                            <p className="text-gray-600">
-                              <span className="font-medium">Dose:</span> {med.dose}
+                            <p className="text-gray-400">
+                              <span className="font-medium text-gray-300">Dose:</span> {med.dose}
                             </p>
                           )}
                           {med.amount && (
-                            <p className="text-gray-600">
-                              <span className="font-medium">Amount:</span> {med.amount}
+                            <p className="text-gray-400">
+                              <span className="font-medium text-gray-300">Amount:</span> {med.amount}
                             </p>
                           )}
                           {med.instructions && (
-                            <p className="text-gray-600">
-                              <span className="font-medium">Instructions:</span> {med.instructions}
+                            <p className="text-gray-400">
+                              <span className="font-medium text-gray-300">Instructions:</span> {med.instructions}
                             </p>
                           )}
                         </div>
@@ -310,13 +306,13 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => openEditModal(med)}
-                      className="text-primary-500 hover:bg-primary-50 p-2 rounded-lg transition-colors"
+                      className="text-primary-400 hover:bg-primary-900/30 p-2 rounded-lg transition-colors border border-transparent hover:border-primary-600"
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleDeleteMedication(med.name)}
-                      className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                      className="text-red-400 hover:bg-red-900/30 p-2 rounded-lg transition-colors border border-transparent hover:border-red-600"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -328,15 +324,22 @@ export default function Dashboard() {
         )}
       </main>
 
+      {/* Modal styles */}
+      <style>{`
+        input, select, textarea {
+          color-scheme: dark;
+        }
+      `}</style>
+
       {/* Add Medication Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Add Medication</h2>
+              <h2 className="text-2xl font-bold text-white">Add Medication</h2>
               <button
                 onClick={() => { setShowAddModal(false); resetForm(); }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-200"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -344,7 +347,7 @@ export default function Dashboard() {
             <form onSubmit={handleAddMedication}>
               <div className="space-y-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Medication Name *
                   </label>
                   <input
@@ -353,11 +356,11 @@ export default function Dashboard() {
                     onChange={(e) => setNewMedName(e.target.value)}
                     placeholder="e.g., Aspirin"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Time *
                   </label>
                   <input
@@ -365,18 +368,18 @@ export default function Dashboard() {
                     value={newMedTime}
                     onChange={(e) => setNewMedTime(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Frequency *
                   </label>
                   <select
                     value={newMedFrequency}
                     onChange={(e) => setNewMedFrequency(e.target.value as FrequencyType)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   >
                     {FREQUENCY_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -384,7 +387,7 @@ export default function Dashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Dose (Optional)
                   </label>
                   <input
@@ -392,11 +395,11 @@ export default function Dashboard() {
                     value={newMedDose}
                     onChange={(e) => setNewMedDose(e.target.value)}
                     placeholder="e.g., 10mg, 2 tablets"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Amount (Optional)
                   </label>
                   <input
@@ -404,11 +407,11 @@ export default function Dashboard() {
                     value={newMedAmount}
                     onChange={(e) => setNewMedAmount(e.target.value)}
                     placeholder="e.g., 1 pill, 5ml"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Instructions (Optional)
                   </label>
                   <textarea
@@ -416,7 +419,7 @@ export default function Dashboard() {
                     onChange={(e) => setNewMedInstructions(e.target.value)}
                     placeholder="e.g., Take with food"
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
                   />
                 </div>
               </div>
@@ -424,14 +427,14 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => { setShowAddModal(false); resetForm(); }}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 border border-gray-600 text-gray-300 font-medium rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Adding...' : 'Add'}
                 </button>
@@ -443,20 +446,20 @@ export default function Dashboard() {
 
       {/* Edit Medication Modal */}
       {showEditModal && editingMed && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Medication</h2>
+              <h2 className="text-2xl font-bold text-white">Edit Medication</h2>
               <button
                 onClick={() => { setShowEditModal(false); setEditingMed(null); resetForm(); }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-200"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-6">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium text-gray-900">Editing:</span> {editingMed.name}
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 mb-6">
+              <p className="text-sm text-gray-300">
+                <span className="font-medium text-white">Editing:</span> {editingMed.name}
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 Note: You cannot change the medication name
@@ -465,7 +468,7 @@ export default function Dashboard() {
             <form onSubmit={handleEditMedication}>
               <div className="space-y-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Time *
                   </label>
                   <input
@@ -473,18 +476,18 @@ export default function Dashboard() {
                     value={newMedTime}
                     onChange={(e) => setNewMedTime(e.target.value)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Frequency *
                   </label>
                   <select
                     value={newMedFrequency}
                     onChange={(e) => setNewMedFrequency(e.target.value as FrequencyType)}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   >
                     {FREQUENCY_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -492,7 +495,7 @@ export default function Dashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Dose (Optional)
                   </label>
                   <input
@@ -500,11 +503,11 @@ export default function Dashboard() {
                     value={newMedDose}
                     onChange={(e) => setNewMedDose(e.target.value)}
                     placeholder="e.g., 10mg, 2 tablets"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Amount (Optional)
                   </label>
                   <input
@@ -512,11 +515,11 @@ export default function Dashboard() {
                     value={newMedAmount}
                     onChange={(e) => setNewMedAmount(e.target.value)}
                     placeholder="e.g., 1 pill, 5ml"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Instructions (Optional)
                   </label>
                   <textarea
@@ -524,7 +527,7 @@ export default function Dashboard() {
                     onChange={(e) => setNewMedInstructions(e.target.value)}
                     placeholder="e.g., Take with food"
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
                   />
                 </div>
               </div>
@@ -532,14 +535,14 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => { setShowEditModal(false); setEditingMed(null); resetForm(); }}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 border border-gray-600 text-gray-300 font-medium rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Saving...' : 'Save'}
                 </button>
@@ -551,26 +554,26 @@ export default function Dashboard() {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+              <h2 className="text-2xl font-bold text-white">Settings</h2>
               <button
                 onClick={() => setShowSettings(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-200"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Timezone
                 </label>
                 <select
                   value={selectedTimezone}
                   onChange={(e) => setSelectedTimezone(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                 >
                   {TIMEZONE_OPTIONS.map(tz => (
                     <option key={tz.value} value={tz.value}>{tz.label}</option>
@@ -585,14 +588,14 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => setShowSettings(false)}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-6 py-3 border border-gray-600 text-gray-300 font-medium rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveSettings}
                 disabled={isSubmitting}
-                className="flex-1 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Saving...' : 'Save'}
               </button>
