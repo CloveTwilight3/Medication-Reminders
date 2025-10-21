@@ -1,36 +1,18 @@
 // src/pwa/src/pages/AuthBot.tsx
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Bot, ArrowLeft, User, Server } from 'lucide-react';
 
 const DISCORD_CLIENT_ID = '1428768597949550644';
-// User-installable URL with integration_type=1 (user install)
-// integration_type=0 is for guild/server install
-const BOT_INVITE_URL = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&integration_type=1`;
 
 export default function AuthBot() {
   const navigate = useNavigate();
-  const [redirecting, setRedirecting] = useState(false);
-  const [installType, setInstallType] = useState<'user' | 'server'>('user');
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setRedirecting(true);
-      const url = installType === 'user' 
-        ? `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&integration_type=1`
-        : `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&scope=bot%20applications.commands&permissions=2048`;
-      window.location.href = url;
-    }, 3000);
+  const handleUserInstall = () => {
+    window.location.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&integration_type=1`;
+  };
 
-    return () => clearTimeout(timer);
-  }, [installType]);
-
-  const handleManualRedirect = () => {
-    setRedirecting(true);
-    const url = installType === 'user' 
-      ? `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&integration_type=1`
-      : `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&scope=bot%20applications.commands&permissions=2048`;
-    window.location.href = url;
+  const handleServerInstall = () => {
+    window.location.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&scope=bot%20applications.commands&permissions=2048`;
   };
 
   return (
@@ -44,138 +26,87 @@ export default function AuthBot() {
           Back to Home
         </button>
 
-        <div className="text-center">
+        <div className="text-center mb-8">
           <div className="inline-block p-4 bg-primary-600/20 border border-primary-500 rounded-full mb-6">
             <Bot className="w-16 h-16 text-primary-400" />
           </div>
 
           <h1 className="text-3xl font-bold text-white mb-4">
-            Add Medication Bot to Your Server
+            Add Medication Bot
           </h1>
 
-          {redirecting ? (
-            <>
-              <div className="mb-6">
-                <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-300 mb-6">
+            Choose how you want to install the bot:
+          </p>
+        </div>
+
+        {/* Installation Options */}
+        <div className="grid md:grid-cols-2 gap-4 mb-8">
+          <button
+            onClick={handleUserInstall}
+            className="group p-6 bg-gray-900 border-2 border-primary-500 rounded-xl hover:bg-primary-900/30 transition-all"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-primary-600/20 border border-primary-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <User className="w-8 h-8 text-primary-400" />
               </div>
-              <p className="text-gray-300 mb-4">
-                Redirecting to Discord authorization...
+              <h3 className="text-xl font-bold text-white mb-2">User Install</h3>
+              <p className="text-sm text-gray-400 mb-4">
+                Recommended for personal use
               </p>
-            </>
-          ) : (
-            <>
-              <p className="text-gray-300 mb-6">
-                Choose how you want to add the Medication Reminder bot:
-              </p>
+              <ul className="text-xs text-gray-500 text-left space-y-1">
+                <li>✓ Works everywhere you go</li>
+                <li>✓ Available in all servers & DMs</li>
+                <li>✓ No server required</li>
+                <li>✓ Personal and portable</li>
+              </ul>
+            </div>
+          </button>
 
-              {/* Installation Type Selector */}
-              <div className="flex gap-4 mb-8">
-                <button
-                  onClick={() => setInstallType('user')}
-                  className={`flex-1 p-6 rounded-xl border-2 transition-all ${
-                    installType === 'user'
-                      ? 'border-primary-500 bg-primary-900/30'
-                      : 'border-gray-600 bg-gray-800 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-3xl mb-2">👤</div>
-                    <h3 className="font-bold text-white mb-1">User Install</h3>
-                    <p className="text-xs text-gray-400">
-                      Add to your account - works everywhere
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setInstallType('server')}
-                  className={`flex-1 p-6 rounded-xl border-2 transition-all ${
-                    installType === 'server'
-                      ? 'border-primary-500 bg-primary-900/30'
-                      : 'border-gray-600 bg-gray-800 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-3xl mb-2">🖥️</div>
-                    <h3 className="font-bold text-white mb-1">Server Install</h3>
-                    <p className="text-xs text-gray-400">
-                      Add to a specific server
-                    </p>
-                  </div>
-                </button>
+          <button
+            onClick={handleServerInstall}
+            className="group p-6 bg-gray-900 border-2 border-gray-600 rounded-xl hover:border-gray-500 hover:bg-gray-800 transition-all"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-gray-700 border border-gray-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Server className="w-8 h-8 text-gray-400" />
               </div>
-
-              <div className="bg-blue-900/30 border border-blue-600 rounded-xl p-6 mb-8 text-left">
-                <h3 className="font-semibold text-blue-300 mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  {installType === 'user' ? 'User Installation Features' : 'Server Installation Features'}
-                </h3>
-                {installType === 'user' ? (
-                  <ul className="space-y-2 text-blue-200 text-sm">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span><strong>Personal Bot:</strong> Access commands in any server or DM</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span><strong>No Server Required:</strong> Works even without being in a server</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span><strong>Portable:</strong> Your medications follow you everywhere</span>
-                    </li>
-                  </ul>
-                ) : (
-                  <ul className="space-y-2 text-blue-200 text-sm">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span><strong>Server-Wide:</strong> Available to all server members</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span><strong>Send Messages:</strong> Permission to send DM reminders</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span><strong>Slash Commands:</strong> /addmed, /listmeds, /editmed, /timezone</span>
-                    </li>
-                  </ul>
-                )}
-              </div>
-
-              <p className="text-gray-400 text-sm mb-6">
-                Redirecting automatically in a moment, or click the button below...
+              <h3 className="text-xl font-bold text-white mb-2">Server Install</h3>
+              <p className="text-sm text-gray-400 mb-4">
+                Traditional bot installation
               </p>
+              <ul className="text-xs text-gray-500 text-left space-y-1">
+                <li>✓ Add to specific server</li>
+                <li>✓ Available to all members</li>
+                <li>✓ Requires server permissions</li>
+                <li>✓ Server-based access</li>
+              </ul>
+            </div>
+          </button>
+        </div>
 
-              <button
-                onClick={handleManualRedirect}
-                className="bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold px-8 py-4 rounded-xl text-lg shadow-xl hover:shadow-primary-500/50 transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
-              >
-                <Bot className="w-6 h-6" />
-                {installType === 'user' ? 'Add to My Account' : 'Add to Server'}
-              </button>
-            </>
-          )}
+        {/* Info Box */}
+        <div className="bg-blue-900/30 border border-blue-600 rounded-xl p-4">
+          <p className="text-blue-200 text-sm">
+            <strong className="text-blue-300">💡 Tip:</strong> User install is recommended for personal medication tracking. 
+            Your reminders will work in any server or DM without needing to add the bot to each server.
+          </p>
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-700">
-          <h3 className="font-semibold text-white mb-3">After Adding the Bot:</h3>
+          <h3 className="font-semibold text-white mb-3 text-center">After Installation:</h3>
           <ol className="text-sm text-gray-300 space-y-2">
             <li className="flex gap-2">
               <span className="font-semibold text-primary-400">1.</span>
-              <span>Select a server where you have "Manage Server" permission</span>
+              <span>Complete the Discord authorization</span>
             </li>
             <li className="flex gap-2">
               <span className="font-semibold text-primary-400">2.</span>
-              <span>Authorize the bot with the requested permissions</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="font-semibold text-primary-400">3.</span>
               <span>Log in to this website with your Discord account</span>
             </li>
             <li className="flex gap-2">
-              <span className="font-semibold text-primary-400">4.</span>
-              <span>Add medications and start receiving reminders!</span>
+              <span className="font-semibold text-primary-400">3.</span>
+              <span>Add your medications and receive reminders!</span>
             </li>
           </ol>
         </div>
