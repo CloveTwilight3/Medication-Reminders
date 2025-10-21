@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bot, CheckCircle, ArrowLeft } from 'lucide-react';
 
 const DISCORD_CLIENT_ID = '1428768597949550644';
-const BOT_INVITE_URL = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&permissions=2048&scope=bot+applications.commands`;
+const BOT_INVITE_URL = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}`;
 
 export default function AuthBot() {
   const navigate = useNavigate();
