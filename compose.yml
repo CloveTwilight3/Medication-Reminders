@@ -16,16 +16,18 @@ services:
       - TZ=UTC  # Change to your timezone (e.g., America/New_York, Europe/London)
       
       # Discord OAuth2 Configuration
-      # Get these from https://discord.com/developers/applications
+      # IMPORTANT: These URLs must match your actual domain
       - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
       - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
-      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI:-http://localhost:3000/api/auth/discord/callback}
+      # This should be your actual domain, not localhost
+      - DISCORD_REDIRECT_URI=https://www.cuddle-blahaj.win/api/auth/discord/callback
       
       # Session Configuration
       - SESSION_SECRET=${SESSION_SECRET}  # Generate a random string for production
       
-      # Frontend URL (for CORS and redirects)
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      # Frontend URL - MUST be same domain as API for cookies to work
+      # Since PWA is served from same domain, use the public domain
+      - FRONTEND_URL=https://www.cuddle-blahaj.win
       
       # API URL (used by bot to communicate with API)
       - API_URL=http://medication-api:3000/api
@@ -61,8 +63,8 @@ services:
       # API Configuration (connects to the API service)
       - API_URL=http://medication-api:3000/api
       
-      # PWA URL (shown in bot help messages)
-      - PWA_URL=${PWA_URL:-http://localhost:3000}
+      # PWA URL (shown in bot help messages) - use your actual domain
+      - PWA_URL=https://www.cuddle-blahaj.win
     depends_on:
       medication-api:
         condition: service_healthy

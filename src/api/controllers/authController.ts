@@ -26,6 +26,20 @@ interface DiscordUser {
   email?: string;
 }
 
+// Helper to get cookie options
+function getCookieOptions() {
+  const isProduction = NODE_ENV === 'production';
+  
+  return {
+    httpOnly: true,
+    secure: isProduction, // Only use secure in production (requires HTTPS)
+    sameSite: 'lax' as const, // Use 'lax' for same-site (PWA and API on same domain)
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    path: '/', // Available on all paths
+    domain: undefined, // Let browser set it automatically
+  };
+}
+
 export class AuthController {
   // Generate Discord OAuth URL
   getDiscordAuthUrl(req: Request, res: Response, next: NextFunction): void {
@@ -48,12 +62,18 @@ export class AuthController {
     try {
       const { code } = req.query;
 
+      console.log('🔐 OAuth callback received');
+      console.log('📍 Redirect URI:', DISCORD_REDIRECT_URI);
+      console.log('📍 Frontend URL:', FRONTEND_URL);
+
       if (!code || typeof code !== 'string') {
+        console.error('❌ No code provided in callback');
         res.redirect(`${FRONTEND_URL}/?error=no_code`);
         return;
       }
 
       // Exchange code for access token
+      console.log('🔄 Exchanging code for token...');
       const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
         headers: {
@@ -69,15 +89,17 @@ export class AuthController {
       });
 
       if (!tokenResponse.ok) {
-        console.error('Token exchange failed:', await tokenResponse.text());
+        console.error('❌ Token exchange failed:', await tokenResponse.text());
         res.redirect(`${FRONTEND_URL}/?error=token_exchange_failed`);
         return;
       }
 
       const tokenData = await tokenResponse.json() as DiscordTokenResponse;
       const accessToken = tokenData.access_token;
+      console.log('✅ Token received');
 
       // Get user info from Discord
+      console.log('👤 Fetching user info...');
       const userResponse = await fetch('https://discord.com/api/users/@me', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -85,13 +107,14 @@ export class AuthController {
       });
 
       if (!userResponse.ok) {
-        console.error('User fetch failed:', await userResponse.text());
+        console.error('❌ User fetch failed:', await userResponse.text());
         res.redirect(`${FRONTEND_URL}/?error=user_fetch_failed`);
         return;
       }
 
       const discordUser = await userResponse.json() as DiscordUser;
       const discordId = discordUser.id;
+      console.log('✅ User info received:', discordUser.username);
 
       // Check if user exists, if not create one
       let user = userService.getUserByDiscordId(discordId);
@@ -99,26 +122,28 @@ export class AuthController {
       if (!user) {
         user = userService.createUser('discord', discordId);
         console.log(`✅ Created new user for Discord ID: ${discordId}`);
+      } else {
+        console.log(`✅ Found existing user: ${user.uid}`);
       }
 
-      // Store user session (using simple cookie-based session)
+      // Store user session
       const sessionToken = userService.generateSessionToken(user.uid);
+      const cookieOptions = getCookieOptions();
       
-      // FIX: More permissive cookie settings
-      res.cookie('session_token', sessionToken, {
-        httpOnly: true,
-        secure: NODE_ENV === 'production',
-        sameSite: NODE_ENV === 'production' ? 'none' : 'lax',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        path: '/', // Ensure cookie is available for all paths
+      console.log('🍪 Setting cookie with options:', {
+        ...cookieOptions,
+        token: sessionToken.substring(0, 10) + '...'
       });
+      
+      res.cookie('session_token', sessionToken, cookieOptions);
 
-      console.log(`✅ Set session cookie for user ${user.uid}`);
+      console.log(`✅ Session cookie set for user ${user.uid}`);
+      console.log(`🔀 Redirecting to: ${FRONTEND_URL}/dashboard`);
 
       // Redirect to frontend dashboard
       res.redirect(`${FRONTEND_URL}/dashboard`);
     } catch (error) {
-      console.error('Discord OAuth error:', error);
+      console.error('❌ Discord OAuth error:', error);
       res.redirect(`${FRONTEND_URL}/?error=auth_failed`);
     }
   }
@@ -126,12 +151,7 @@ export class AuthController {
   // Logout
   logout(req: Request, res: Response, next: NextFunction): void {
     try {
-      res.clearCookie('session_token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/',
-      });
+      res.clearCookie('session_token', getCookieOptions());
 
       const response: ApiResponse = {
         success: true,
@@ -151,6 +171,8 @@ export class AuthController {
 
       console.log('🔍 Auth check - Cookie received:', !!sessionToken);
       console.log('🔍 All cookies:', Object.keys(req.cookies || {}));
+      console.log('🔍 Request origin:', req.headers.origin);
+      console.log('🔍 Request host:', req.headers.host);
 
       if (!sessionToken) {
         res.status(401).json({
@@ -164,12 +186,7 @@ export class AuthController {
 
       if (!uid) {
         console.log('❌ Invalid or expired session token');
-        res.clearCookie('session_token', {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-          path: '/',
-        });
+        res.clearCookie('session_token', getCookieOptions());
         res.status(401).json({
           success: false,
           error: 'Invalid or expired session'
@@ -181,12 +198,7 @@ export class AuthController {
 
       if (!user) {
         console.log('❌ User not found for uid:', uid);
-        res.clearCookie('session_token', {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-          path: '/',
-        });
+        res.clearCookie('session_token', getCookieOptions());
         res.status(404).json({
           success: false,
           error: 'User not found'
