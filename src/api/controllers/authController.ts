@@ -9,7 +9,6 @@ const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI!;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Add interfaces for Discord API responses
 interface DiscordTokenResponse {
   access_token: string;
   token_type: string;
@@ -26,22 +25,20 @@ interface DiscordUser {
   email?: string;
 }
 
-// Helper to get cookie options
 function getCookieOptions() {
   const isProduction = NODE_ENV === 'production';
   
   return {
     httpOnly: true,
-    secure: isProduction, // Only use secure in production (requires HTTPS)
-    sameSite: 'lax' as const, // Use 'lax' for same-site (PWA and API on same domain)
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    path: '/', // Available on all paths
-    domain: undefined, // Let browser set it automatically
+    secure: isProduction,
+    sameSite: 'lax' as const,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/',
+    domain: undefined,
   };
 }
 
 export class AuthController {
-  // Generate Discord OAuth URL
   getDiscordAuthUrl(req: Request, res: Response, next: NextFunction): void {
     try {
       const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
@@ -57,14 +54,13 @@ export class AuthController {
     }
   }
 
-  // Handle Discord OAuth callback
   async handleDiscordCallback(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { code } = req.query;
+      const timezone = req.query.timezone as string | undefined;
 
       console.log('🔐 OAuth callback received');
-      console.log('📍 Redirect URI:', DISCORD_REDIRECT_URI);
-      console.log('📍 Frontend URL:', FRONTEND_URL);
+      console.log('🌍 Timezone:', timezone || 'Not provided');
 
       if (!code || typeof code !== 'string') {
         console.error('❌ No code provided in callback');
@@ -73,7 +69,6 @@ export class AuthController {
       }
 
       // Exchange code for access token
-      console.log('🔄 Exchanging code for token...');
       const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
         headers: {
@@ -96,10 +91,8 @@ export class AuthController {
 
       const tokenData = await tokenResponse.json() as DiscordTokenResponse;
       const accessToken = tokenData.access_token;
-      console.log('✅ Token received');
 
       // Get user info from Discord
-      console.log('👤 Fetching user info...');
       const userResponse = await fetch('https://discord.com/api/users/@me', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -114,14 +107,13 @@ export class AuthController {
 
       const discordUser = await userResponse.json() as DiscordUser;
       const discordId = discordUser.id;
-      console.log('✅ User info received:', discordUser.username);
 
       // Check if user exists, if not create one
       let user = userService.getUserByDiscordId(discordId);
       
       if (!user) {
-        user = userService.createUser('discord', discordId);
-        console.log(`✅ Created new user for Discord ID: ${discordId}`);
+        user = userService.createUser('discord', discordId, timezone);
+        console.log(`✅ Created new user for Discord ID: ${discordId} with timezone: ${user.timezone}`);
       } else {
         console.log(`✅ Found existing user: ${user.uid}`);
       }
@@ -130,15 +122,8 @@ export class AuthController {
       const sessionToken = userService.generateSessionToken(user.uid);
       const cookieOptions = getCookieOptions();
       
-      console.log('🍪 Setting cookie with options:', {
-        ...cookieOptions,
-        token: sessionToken.substring(0, 10) + '...'
-      });
-      
       res.cookie('session_token', sessionToken, cookieOptions);
-
       console.log(`✅ Session cookie set for user ${user.uid}`);
-      console.log(`🔀 Redirecting to: ${FRONTEND_URL}/dashboard`);
 
       // Redirect to frontend dashboard
       res.redirect(`${FRONTEND_URL}/dashboard`);
@@ -148,7 +133,6 @@ export class AuthController {
     }
   }
 
-  // Logout
   logout(req: Request, res: Response, next: NextFunction): void {
     try {
       res.clearCookie('session_token', getCookieOptions());
@@ -164,15 +148,9 @@ export class AuthController {
     }
   }
 
-  // Get current user from session
   async getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const sessionToken = req.cookies?.session_token;
-
-      console.log('🔍 Auth check - Cookie received:', !!sessionToken);
-      console.log('🔍 All cookies:', Object.keys(req.cookies || {}));
-      console.log('🔍 Request origin:', req.headers.origin);
-      console.log('🔍 Request host:', req.headers.host);
 
       if (!sessionToken) {
         res.status(401).json({
@@ -185,7 +163,6 @@ export class AuthController {
       const uid = userService.validateSessionToken(sessionToken);
 
       if (!uid) {
-        console.log('❌ Invalid or expired session token');
         res.clearCookie('session_token', getCookieOptions());
         res.status(401).json({
           success: false,
@@ -197,7 +174,6 @@ export class AuthController {
       const user = userService.getUser(uid);
 
       if (!user) {
-        console.log('❌ User not found for uid:', uid);
         res.clearCookie('session_token', getCookieOptions());
         res.status(404).json({
           success: false,
@@ -206,11 +182,54 @@ export class AuthController {
         return;
       }
 
-      console.log('✅ User authenticated:', uid);
-
       const response: ApiResponse = {
         success: true,
         data: { uid, user }
+      };
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateUserSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const sessionToken = req.cookies?.session_token;
+      
+      if (!sessionToken) {
+        res.status(401).json({
+          success: false,
+          error: 'Not authenticated'
+        });
+        return;
+      }
+
+      const uid = userService.validateSessionToken(sessionToken);
+      if (!uid) {
+        res.status(401).json({
+          success: false,
+          error: 'Invalid session'
+        });
+        return;
+      }
+
+      const { timezone } = req.body;
+
+      const user = userService.updateUser(uid, { timezone });
+
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+        return;
+      }
+
+      const response: ApiResponse = {
+        success: true,
+        data: user,
+        message: 'Settings updated successfully'
       };
 
       res.json(response);

@@ -38,7 +38,7 @@ export class StorageService {
     }
   }
 
-  private saveUserMedications(uid: string, medications: Medication[]): void {
+  saveUserMedications(uid: string, medications: Medication[]): void {
     const filePath = this.getUserFilePath(uid);
     
     try {
@@ -62,7 +62,7 @@ export class StorageService {
     return userMeds.find(m => m.name === medName) || null;
   }
 
-  addMedication(uid: string, medication: Omit<Medication, 'taken' | 'reminderSent'>): Medication {
+  addMedication(uid: string, medication: Omit<Medication, 'taken' | 'reminderSent' | 'createdAt' | 'updatedAt'>): Medication {
     const userMeds = this.loadUserMedications(uid);
 
     // Check for duplicates
@@ -106,18 +106,6 @@ export class StorageService {
     return true;
   }
 
-  markMedicationTaken(uid: string, medName: string, taken: boolean = true): boolean {
-    const userMeds = this.loadUserMedications(uid);
-    const med = userMeds.find(m => m.name === medName);
-    
-    if (!med) return false;
-
-    med.taken = taken;
-    med.updatedAt = new Date();
-    this.saveUserMedications(uid, userMeds);
-    return true;
-  }
-
   getAllUserMedications(): { uid: string; medications: Medication[] }[] {
     const result: { uid: string; medications: Medication[] }[] = [];
 
@@ -143,8 +131,14 @@ export class StorageService {
 
     for (const { uid, medications } of allUsers) {
       for (const med of medications) {
-        med.taken = false;
-        med.reminderSent = false;
+        // Only reset daily medications
+        if (med.frequency === 'daily') {
+          med.taken = false;
+          med.reminderSent = false;
+        } else {
+          // For non-daily, just reset reminderSent
+          med.reminderSent = false;
+        }
         med.updatedAt = new Date();
       }
       this.saveUserMedications(uid, medications);

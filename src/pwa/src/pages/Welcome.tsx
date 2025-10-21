@@ -1,7 +1,7 @@
 // src/pwa/src/pages/Welcome.tsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pill, Bell, MessageCircle, Check } from 'lucide-react';
+import { Pill, Bell, MessageCircle, Check, Clock } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Welcome() {
@@ -10,7 +10,11 @@ export default function Welcome() {
   const handleDiscordLogin = async () => {
     setIsLoading(true);
     try {
-      const { url } = await api.getDiscordAuthUrl();
+      // Detect timezone from browser
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log('Detected timezone:', detectedTimezone);
+
+      const { url } = await api.getDiscordAuthUrl(detectedTimezone);
       window.location.href = url;
     } catch (error) {
       console.error('Failed to get Discord auth URL:', error);
@@ -33,43 +37,59 @@ export default function Welcome() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Smart reminders for your health. Get notified on your phone, desktop, and Discord.
           </p>
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm text-green-700">
+            <Check className="w-4 h-4" />
+            Version 2.0 - Now with frequency options and timezone support!
+          </div>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+        <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto mb-16">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <Bell className="w-6 h-6 text-primary-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Smart Reminders
             </h3>
-            <p className="text-gray-600">
-              Get timely notifications across all your devices when it's time to take your medication.
+            <p className="text-sm text-gray-600">
+              Timely notifications across all your devices when it's time for your medication.
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
+              <Clock className="w-6 h-6 text-primary-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Multiple Frequencies
+            </h3>
+            <p className="text-sm text-gray-600">
+              Daily, every 2 days, weekly, bi-weekly, or monthly medication schedules.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <MessageCircle className="w-6 h-6 text-primary-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Discord Integration
             </h3>
-            <p className="text-gray-600">
-              Receive reminders directly in Discord DMs. Manage medications with simple commands.
+            <p className="text-sm text-gray-600">
+              Receive reminders in Discord DMs. Manage medications with simple commands.
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <Check className="w-6 h-6 text-primary-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Track Progress
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Detailed Tracking
             </h3>
-            <p className="text-gray-600">
-              Mark medications as taken and keep track of your daily medication schedule.
+            <p className="text-sm text-gray-600">
+              Add dose, amount, and instructions. Track your medication progress.
             </p>
           </div>
         </div>
@@ -85,7 +105,7 @@ export default function Welcome() {
             {isLoading ? 'Connecting to Discord...' : 'Login with Discord'}
           </button>
           <p className="text-gray-500 mt-4">
-            Secure OAuth authentication • Free forever
+            Secure OAuth authentication • Free forever • Your timezone will be auto-detected
           </p>
           <p className="text-sm text-gray-400 mt-2">
             By continuing, you agree to our{' '}
@@ -99,14 +119,35 @@ export default function Welcome() {
           </p>
         </div>
 
-        {/* Info Section */}
-        <div className="mt-16 text-center max-w-2xl mx-auto">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <h3 className="font-semibold text-blue-900 mb-2">Why Discord?</h3>
-            <p className="text-blue-800 text-sm">
-              We use Discord for secure authentication and to send you medication reminders directly in your DMs. 
-              You'll also be able to manage medications using Discord commands from anywhere.
-            </p>
+        {/* What's New in V2 */}
+        <div className="mt-16 max-w-3xl mx-auto">
+          <div className="bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-xl p-8">
+            <h3 className="text-2xl font-bold text-primary-900 mb-4 flex items-center gap-2">
+              <Check className="w-6 h-6" />
+              What's New in Version 2.0
+            </h3>
+            <ul className="space-y-3 text-primary-800">
+              <li className="flex items-start gap-3">
+                <span className="text-primary-500 mt-1">✓</span>
+                <span><strong>Multiple Frequency Options:</strong> Daily, every 2 days, weekly, bi-weekly, and monthly schedules</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-primary-500 mt-1">✓</span>
+                <span><strong>Timezone Support:</strong> Automatic timezone detection with manual override option</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-primary-500 mt-1">✓</span>
+                <span><strong>Medication Details:</strong> Add optional dose, amount, and special instructions</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-primary-500 mt-1">✓</span>
+                <span><strong>Edit Medications:</strong> Update time, frequency, and details without deleting</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-primary-500 mt-1">✓</span>
+                <span><strong>Better Discord Commands:</strong> New /editmed and /timezone commands</span>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -129,6 +170,8 @@ export default function Welcome() {
             >
               GitHub
             </a>
+            <span>•</span>
+            <span className="text-primary-600 font-semibold">v2.0</span>
           </div>
         </footer>
       </div>

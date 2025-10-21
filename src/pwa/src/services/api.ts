@@ -1,9 +1,6 @@
 // src/pwa/src/services/api.ts
-import { User, Medication, ApiResponse } from '../types';
+import { User, Medication, ApiResponse, FrequencyType } from '../types';
 
-// Use relative URL so it works through nginx proxy
-// In development with vite proxy, this will proxy to localhost:3000
-// In production, this will use the same domain (www.cuddle-blahaj.win)
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ApiClient {
@@ -13,7 +10,7 @@ class ApiClient {
   ): Promise<T> {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
-      credentials: 'include', // Important for cookies
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -31,8 +28,9 @@ class ApiClient {
 
   // ========== AUTH ==========
 
-  async getDiscordAuthUrl(): Promise<{ url: string }> {
-    return this.request<{ url: string }>('/auth/discord');
+  async getDiscordAuthUrl(timezone?: string): Promise<{ url: string }> {
+    const params = timezone ? `?timezone=${encodeURIComponent(timezone)}` : '';
+    return this.request<{ url: string }>(`/auth/discord${params}`);
   }
 
   async getCurrentUser(): Promise<{ uid: string; user: User }> {
@@ -42,6 +40,13 @@ class ApiClient {
   async logout(): Promise<void> {
     await this.request<void>('/auth/logout', {
       method: 'POST',
+    });
+  }
+
+  async updateSettings(timezone: string): Promise<User> {
+    return this.request<User>('/auth/settings', {
+      method: 'PATCH',
+      body: JSON.stringify({ timezone }),
     });
   }
 
@@ -55,17 +60,33 @@ class ApiClient {
     return this.request<Medication>(`/medications/${uid}/${encodeURIComponent(medName)}`);
   }
 
-  async createMedication(uid: string, name: string, time: string): Promise<Medication> {
+  async createMedication(
+    uid: string,
+    medication: {
+      name: string;
+      time: string;
+      frequency: FrequencyType;
+      dose?: string;
+      amount?: string;
+      instructions?: string;
+    }
+  ): Promise<Medication> {
     return this.request<Medication>(`/medications/${uid}`, {
       method: 'POST',
-      body: JSON.stringify({ name, time }),
+      body: JSON.stringify(medication),
     });
   }
 
   async updateMedication(
     uid: string,
     medName: string,
-    updates: Partial<Medication>
+    updates: {
+      time?: string;
+      frequency?: FrequencyType;
+      dose?: string;
+      amount?: string;
+      instructions?: string;
+    }
   ): Promise<Medication> {
     return this.request<Medication>(
       `/medications/${uid}/${encodeURIComponent(medName)}`,

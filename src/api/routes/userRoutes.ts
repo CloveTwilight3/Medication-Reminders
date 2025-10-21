@@ -4,7 +4,7 @@ import { userController } from '../controllers/userController';
 
 export const userRouter = Router();
 
-// Create new user (kept for backwards compatibility, but OAuth handles this)
+// Create new user
 userRouter.post('/', (req, res, next) => 
   userController.createUser(req, res, next)
 );
@@ -14,12 +14,17 @@ userRouter.get('/:uid', (req, res, next) =>
   userController.getUser(req, res, next)
 );
 
+// Update user settings
+userRouter.patch('/:uid/settings', (req, res, next) => 
+  userController.updateUserSettings(req, res, next)
+);
+
 // Get user by Discord ID
 userRouter.get('/discord/:discordId', (req, res, next) => 
   userController.getUserByDiscordId(req, res, next)
 );
 
-// Link Discord to user (kept for manual linking if needed)
+// Link Discord to user
 userRouter.post('/:uid/link-discord', (req, res, next) => 
   userController.linkDiscord(req, res, next)
 );

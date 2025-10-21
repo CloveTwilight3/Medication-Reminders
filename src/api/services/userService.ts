@@ -1,7 +1,7 @@
 // src/api/services/userService.ts
 import * as fs from 'fs';
 import * as path from 'path';
-import { User, SessionToken } from '../types';
+import { User, SessionToken, UpdateUserRequest } from '../types';
 import { randomBytes } from 'crypto';
 
 export class UserService {
@@ -104,17 +104,54 @@ export class UserService {
     return `uid_${randomBytes(8).toString('hex')}`;
   }
 
+  private validateTimezone(timezone: string): boolean {
+    try {
+      Intl.DateTimeFormat(undefined, { timeZone: timezone });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   // Create a new user
-  createUser(createdVia: 'discord' | 'pwa', discordId?: string): User {
+  createUser(createdVia: 'discord' | 'pwa', discordId?: string, timezone?: string): User {
     const uid = this.generateUid();
+    
+    // Default to UTC if no timezone provided
+    let userTimezone = timezone || 'UTC';
+    
+    // Validate timezone
+    if (!this.validateTimezone(userTimezone)) {
+      console.warn(`Invalid timezone ${userTimezone}, defaulting to UTC`);
+      userTimezone = 'UTC';
+    }
+
     const user: User = {
       uid,
       discordId: discordId || null,
+      timezone: userTimezone,
       createdAt: new Date(),
       createdVia
     };
 
     this.users[uid] = user;
+    this.saveUsers();
+    return user;
+  }
+
+  // Update user settings
+  updateUser(uid: string, updates: UpdateUserRequest): User | null {
+    const user = this.users[uid];
+    if (!user) return null;
+
+    // Validate timezone if provided
+    if (updates.timezone) {
+      if (!this.validateTimezone(updates.timezone)) {
+        throw new Error('Invalid timezone');
+      }
+      user.timezone = updates.timezone;
+    }
+
     this.saveUsers();
     return user;
   }

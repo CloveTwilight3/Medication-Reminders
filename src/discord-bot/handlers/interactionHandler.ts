@@ -4,18 +4,18 @@ import { apiClient } from '../services/apiClient';
 import {
   handleAddMed,
   handleListMeds,
+  handleEditMed,
   handleRemoveMed,
+  handleTimezone,
   handleHelp,
 } from '../commands/commandHandlers';
 
-// Store for pending reminders
 const pendingReminders = new Map<string, NodeJS.Timeout>();
 
 export async function handleInteraction(
   interaction: Interaction,
   client: Client
 ): Promise<void> {
-  // Handle slash commands
   if (interaction.isChatInputCommand()) {
     try {
       switch (interaction.commandName) {
@@ -25,8 +25,14 @@ export async function handleInteraction(
         case 'listmeds':
           await handleListMeds(interaction);
           break;
+        case 'editmed':
+          await handleEditMed(interaction);
+          break;
         case 'removemed':
           await handleRemoveMed(interaction);
+          break;
+        case 'timezone':
+          await handleTimezone(interaction);
           break;
         case 'help':
           await handleHelp(interaction);
@@ -37,27 +43,6 @@ export async function handleInteraction(
             flags: MessageFlags.Ephemeral,
           });
       }
-    } catch (error) {
-      console.error('Error handling command:', error);
-
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({
-          content: '❌ An error occurred while processing your command.',
-          flags: MessageFlags.Ephemeral,
-        });
-      } else {
-        await interaction.reply({
-          content: '❌ An error occurred while processing your command.',
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-    }
-  }
-
-  // Handle button interactions
-  if (interaction.isButton()) {
-    try {
-      await handleButtonInteraction(interaction);
     } catch (error) {
       console.error('Error handling button:', error);
 
@@ -84,13 +69,9 @@ async function handleButtonInteraction(interaction: Interaction): Promise<void> 
 
   if (action === 'take') {
     try {
-      // Get user by Discord ID
       const user = await apiClient.getUserByDiscordId(discordId);
-
-      // Mark medication as taken
       await apiClient.markMedicationTaken(user.uid, medName);
 
-      // Cancel pending follow-up reminder
       const reminderId = `${user.uid}-${medName}`;
       cancelPendingReminder(reminderId);
 
@@ -118,7 +99,6 @@ async function handleButtonInteraction(interaction: Interaction): Promise<void> 
   }
 }
 
-// Export functions to manage pending reminders
 export function setPendingReminder(reminderId: string, timeout: NodeJS.Timeout): void {
   pendingReminders.set(reminderId, timeout);
 }
@@ -131,4 +111,24 @@ export function cancelPendingReminder(reminderId: string): boolean {
     return true;
   }
   return false;
-}
+} handling command:', error);
+
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: '❌ An error occurred while processing your command.',
+          flags: MessageFlags.Ephemeral,
+        });
+      } else {
+        await interaction.reply({
+          content: '❌ An error occurred while processing your command.',
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    }
+  }
+
+  if (interaction.isButton()) {
+    try {
+      await handleButtonInteraction(interaction);
+    } catch (error) {
+      console.error('Error

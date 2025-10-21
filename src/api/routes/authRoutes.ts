@@ -23,3 +23,8 @@ authRouter.post('/logout', (req: Request, res: Response, next: NextFunction) =>
 authRouter.get('/me', (req: Request, res: Response, next: NextFunction) => 
   authController.getCurrentUser(req, res, next)
 );
+
+// Update user settings (timezone)
+authRouter.patch('/settings', (req: Request, res: Response, next: NextFunction) => 
+  authController.updateUserSettings(req, res, next)
+);
