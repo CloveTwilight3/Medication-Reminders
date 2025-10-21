@@ -1,5 +1,6 @@
 // src/pwa/src/pages/Welcome.tsx
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Pill, Bell, MessageCircle, Check } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -86,6 +87,16 @@ export default function Welcome() {
           <p className="text-gray-500 mt-4">
             Secure OAuth authentication • Free forever
           </p>
+          <p className="text-sm text-gray-400 mt-2">
+            By continuing, you agree to our{' '}
+            <Link to="/terms" className="text-primary-600 hover:text-primary-700 underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-primary-600 hover:text-primary-700 underline">
+              Privacy Policy
+            </Link>
+          </p>
         </div>
 
         {/* Info Section */}
@@ -98,6 +109,28 @@ export default function Welcome() {
             </p>
           </div>
         </div>
+
+        {/* Footer Links */}
+        <footer className="mt-16 text-center">
+          <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+            <Link to="/terms" className="hover:text-primary-600 transition-colors">
+              Terms of Service
+            </Link>
+            <span>•</span>
+            <Link to="/privacy" className="hover:text-primary-600 transition-colors">
+              Privacy Policy
+            </Link>
+            <span>•</span>
+            <a 
+              href="https://github.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-primary-600 transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
+        </footer>
       </div>
     </div>
   );

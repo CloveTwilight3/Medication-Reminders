@@ -7,6 +7,7 @@ const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI!;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Add interfaces for Discord API responses
 interface DiscordTokenResponse {
@@ -101,15 +102,18 @@ export class AuthController {
       }
 
       // Store user session (using simple cookie-based session)
-      // In production, consider using express-session with Redis
       const sessionToken = userService.generateSessionToken(user.uid);
       
+      // FIX: More permissive cookie settings
       res.cookie('session_token', sessionToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: NODE_ENV === 'production',
+        sameSite: NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: '/', // Ensure cookie is available for all paths
       });
+
+      console.log(`✅ Set session cookie for user ${user.uid}`);
 
       // Redirect to frontend dashboard
       res.redirect(`${FRONTEND_URL}/dashboard`);
@@ -122,7 +126,12 @@ export class AuthController {
   // Logout
   logout(req: Request, res: Response, next: NextFunction): void {
     try {
-      res.clearCookie('session_token');
+      res.clearCookie('session_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/',
+      });
 
       const response: ApiResponse = {
         success: true,
@@ -140,6 +149,9 @@ export class AuthController {
     try {
       const sessionToken = req.cookies?.session_token;
 
+      console.log('🔍 Auth check - Cookie received:', !!sessionToken);
+      console.log('🔍 All cookies:', Object.keys(req.cookies || {}));
+
       if (!sessionToken) {
         res.status(401).json({
           success: false,
@@ -151,7 +163,13 @@ export class AuthController {
       const uid = userService.validateSessionToken(sessionToken);
 
       if (!uid) {
-        res.clearCookie('session_token');
+        console.log('❌ Invalid or expired session token');
+        res.clearCookie('session_token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+          path: '/',
+        });
         res.status(401).json({
           success: false,
           error: 'Invalid or expired session'
@@ -162,13 +180,21 @@ export class AuthController {
       const user = userService.getUser(uid);
 
       if (!user) {
-        res.clearCookie('session_token');
+        console.log('❌ User not found for uid:', uid);
+        res.clearCookie('session_token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+          path: '/',
+        });
         res.status(404).json({
           success: false,
           error: 'User not found'
         });
         return;
       }
+
+      console.log('✅ User authenticated:', uid);
 
       const response: ApiResponse = {
         success: true,

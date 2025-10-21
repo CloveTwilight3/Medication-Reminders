@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider, useUser } from './contexts/UserContext';
 import Welcome from './pages/Welcome';
 import Dashboard from './pages/Dashboard';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { uid, isLoading } = useUser();
@@ -39,6 +41,8 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
       {/* Redirect any unknown routes to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
