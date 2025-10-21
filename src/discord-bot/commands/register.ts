@@ -135,26 +135,35 @@ const commands = [
     .setDescription('Show help information about the medication bot')
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
-].map(command => command.toJSON());
+].map(command => {
+  const json = command.toJSON();
+  // Set integration types for user-installable app
+  // 0 = GUILD_INSTALL (server installation)
+  // 1 = USER_INSTALL (user installation)
+  json.integration_types = [0, 1];
+  // Set contexts where command can be used
+  // 0 = GUILD (in servers)
+  // 1 = BOT_DM (in DMs with the bot)
+  // 2 = PRIVATE_CHANNEL (in group DMs and DMs)
+  json.contexts = [0, 1, 2];
+  return json;
+});
 
 export async function registerCommands(client: Client): Promise<void> {
   try {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
 
-    console.log('Started refreshing application (/) commands as USER commands.');
+    console.log('Started refreshing application (/) commands as USER-INSTALLABLE commands.');
 
-    // Register as global commands
-    // The key changes are:
-    // 1. setDMPermission(true) - allows commands in DMs
-    // 2. setDefaultMemberPermissions(null) - removes server restrictions
-    // This makes them "user commands" that work everywhere for the user
+    // Register as global commands with integration types
     await rest.put(
       Routes.applicationCommands(client.user!.id),
       { body: commands }
     );
 
-    console.log('✅ Successfully registered application commands as USER commands.');
-    console.log('ℹ️  Commands are now available to users in DMs and servers.');
+    console.log('✅ Successfully registered application commands as USER-INSTALLABLE.');
+    console.log('ℹ️  Integration Types: GUILD_INSTALL (0), USER_INSTALL (1)');
+    console.log('ℹ️  Contexts: GUILD (0), BOT_DM (1), PRIVATE_CHANNEL (2)');
   } catch (error) {
     console.error('Error registering commands:', error);
   }
