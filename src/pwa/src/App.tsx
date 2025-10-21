@@ -5,6 +5,7 @@ import Welcome from './pages/Welcome';
 import Dashboard from './pages/Dashboard';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import AuthBot from './pages/AuthBot';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { uid, isLoading } = useUser();
@@ -43,6 +44,7 @@ function AppRoutes() {
       />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/auth-bot" element={<AuthBot />} />
       {/* Redirect any unknown routes to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

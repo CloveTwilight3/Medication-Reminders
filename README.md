@@ -1,3 +1,5 @@
-# Medication Reminder System
+## Medication Reminder System
 
-# THIS SYSTEM IS STILL IN DEV, PLEASE WAIT FOR THIS README TO UPDATE TIL YOU TRY USING SYSTEM
+This system is a basic API system, which includes a PWA and Discord Bot system so you remember to take your medications *on time*
+
+You can connect the bot to your account or add it to a server using [this](https://www.cuddle-blahaj.win/auth-bot) link and you can connect to the PWA on [https://www.cuddle-blahaj.win](https://www.cuddle-blahaj.win)

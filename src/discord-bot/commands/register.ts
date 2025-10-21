@@ -14,7 +14,7 @@ const commands = [
     .addStringOption(option =>
       option
         .setName('time')
-        .setDescription('Time to take medication (HH:MM format, e.g., 09:00)')
+        .setDescription('Time to take medication in UTC (HH:MM format, e.g., 09:00)')
         .setRequired(true)
     ),
 

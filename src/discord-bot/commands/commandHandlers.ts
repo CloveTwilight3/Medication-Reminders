@@ -16,7 +16,7 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
     await apiClient.createMedication(user.uid, medName, time);
 
     await interaction.reply({
-      content: `✅ Added medication reminder for **${medName}** at **${time}** daily.\n\n*You will receive DM reminders at this time each day.*`,
+      content: `✅ Added medication reminder for **${medName}** at **${time}** UTC daily.\n\n*You will receive DM reminders at this time each day.*`,
       flags: MessageFlags.Ephemeral,
     });
   } catch (error) {
@@ -49,7 +49,7 @@ export async function handleListMeds(interaction: ChatInputCommandInteraction): 
       .setTitle('💊 Your Medications')
       .setDescription(
         userMeds
-          .map(med => `**${med.name}** - ${med.time} ${med.taken ? '✅' : '⏳'}`)
+          .map(med => `**${med.name}** - ${med.time} UTC ${med.taken ? '✅' : '⏳'}`)
           .join('\n')
       )
       .setFooter({ text: '✅ = Taken today | ⏳ = Not taken yet' })
@@ -95,7 +95,7 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
     .addFields(
       {
         name: '/addmed',
-        value: 'Add a daily medication reminder\n*Example: `/addmed name:Aspirin time:09:00`*',
+        value: 'Add a daily medication reminder (time in UTC)\n*Example: `/addmed name:Aspirin time:09:00`*',
       },
       {
         name: '/listmeds',
