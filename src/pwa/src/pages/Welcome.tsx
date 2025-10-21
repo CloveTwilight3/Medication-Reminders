@@ -122,7 +122,7 @@ export default function Welcome() {
             </Link>
             <span>•</span>
             <a 
-              href="https://github.com" 
+              href="https://github.com/clovetwilight3/medication-reminders" 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:text-primary-600 transition-colors"
