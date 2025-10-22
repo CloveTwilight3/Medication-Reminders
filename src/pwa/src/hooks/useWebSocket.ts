@@ -16,8 +16,8 @@ interface UseWebSocketOptions {
   maxReconnectAttempts?: number;
 }
 
-const WS_URL = import.meta.env.VITE_WS_URL || 
-  (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/ws';
+const WS_URL = import.meta.env.VITE_WS_URL ||
+  ((window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/ws');
 
 export function useWebSocket(sessionToken: string | null, options: UseWebSocketOptions = {}) {
   const {
@@ -32,86 +32,106 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const isConnectingRef = useRef(false); // ← PREVENT DUPLICATE CONNECTIONS
+  const isConnectingRef = useRef(false);
+  const isMountedRef = useRef(true);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
 
+  const debugLog = (...args: any[]) => {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log(...args);
+    }
+  };
+
   const connect = useCallback(() => {
     if (!sessionToken) {
-      console.log('No session token, skipping WebSocket connection');
+      debugLog('No session token, skipping WebSocket connection');
       return;
     }
 
-    // ✅ CRITICAL FIX: Prevent duplicate connections
+    // Prevent duplicate connection attempts
     if (isConnectingRef.current) {
-      console.log('Connection already in progress, skipping...');
+      debugLog('Connection already in progress, skipping...');
       return;
     }
 
     if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
-      console.log('WebSocket already connected/connecting');
+      debugLog('WebSocket already connected/connecting');
       return;
     }
 
     try {
-      isConnectingRef.current = true; // ← Set guard
+      isConnectingRef.current = true;
       setConnectionStatus('connecting');
-      console.log('🔌 Connecting to WebSocket...');
-      
-      const url = `${WS_URL}?token=${sessionToken}`;
+      debugLog('🔌 Connecting to WebSocket...');
+
+      const url = `${WS_URL}?token=${encodeURIComponent(sessionToken)}`;
       const ws = new WebSocket(url);
 
       ws.onopen = () => {
-        console.log('✅ WebSocket connected');
+        if (!isMountedRef.current) {
+          // If unmounted while opening, close immediately
+          ws.close();
+          return;
+        }
+        debugLog('✅ WebSocket connected');
         setIsConnected(true);
         setConnectionStatus('connected');
         reconnectAttemptsRef.current = 0;
-        isConnectingRef.current = false; // ← Clear guard on success
+        isConnectingRef.current = false;
         onConnect?.();
       };
 
       ws.onmessage = (event) => {
         try {
           const message: WSMessage = JSON.parse(event.data);
-          console.log('📨 WebSocket message:', message);
+          debugLog('📨 WebSocket message:', message);
           onMessage?.(message);
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          if (import.meta.env.DEV) console.error('Failed to parse WebSocket message:', error);
         }
       };
 
-      ws.onclose = () => {
-        console.log('🔌 WebSocket disconnected');
+      ws.onclose = (ev) => {
+        debugLog('🔌 WebSocket disconnected', ev?.code, ev?.reason);
         setIsConnected(false);
         setConnectionStatus('disconnected');
         wsRef.current = null;
-        isConnectingRef.current = false; // ← Clear guard
+        isConnectingRef.current = false;
         onDisconnect?.();
 
-        // Attempt to reconnect
+        // Only attempt to reconnect if the component is still mounted and token still present
+        if (!isMountedRef.current || !sessionToken) return;
+
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current++;
-          console.log(`Reconnecting... (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
-          
+          debugLog(`Reconnecting... (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+          }
+
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, reconnectInterval);
         } else {
-          console.log('Max reconnection attempts reached');
+          debugLog('Max reconnection attempts reached');
         }
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        isConnectingRef.current = false; // ← Clear guard on error
-        onError?.(error);
+        if (import.meta.env.DEV) console.error('WebSocket error:', error);
+        isConnectingRef.current = false;
+        onError?.(error as Event);
       };
 
       wsRef.current = ws;
     } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
+      isConnectingRef.current = false;
+      if (import.meta.env.DEV) console.error('Failed to create WebSocket connection:', error);
       setConnectionStatus('disconnected');
-      isConnectingRef.current = false; // ← Clear guard on exception
     }
   }, [sessionToken, onMessage, onConnect, onDisconnect, onError, reconnectInterval, maxReconnectAttempts]);
 
@@ -122,7 +142,11 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
     }
 
     if (wsRef.current) {
-      wsRef.current.close();
+      try {
+        wsRef.current.close();
+      } catch {
+        // ignore
+      }
       wsRef.current = null;
     }
 
@@ -133,9 +157,13 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
 
   const sendMessage = useCallback((message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
+      try {
+        wsRef.current.send(JSON.stringify(message));
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('Failed to send WebSocket message:', err);
+      }
     } else {
-      console.warn('WebSocket is not connected. Message not sent.');
+      debugLog('WebSocket is not connected. Message not sent.');
     }
   }, []);
 
@@ -144,14 +172,18 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
   }, [sendMessage]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     if (sessionToken) {
       connect();
     }
 
     return () => {
+      isMountedRef.current = false;
       disconnect();
     };
-  }, [sessionToken]); // ← Only reconnect when token changes
+    // Intentionally only restart when sessionToken changes.
+    // connect is stable enough for this usage because it depends on sessionToken.
+  }, [sessionToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Send ping every 30 seconds to keep connection alive
   useEffect(() => {
