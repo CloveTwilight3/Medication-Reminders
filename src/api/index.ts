@@ -14,6 +14,7 @@ import { authRouter } from './routes/authRoutes';
 import { websocketService } from './services/websocketService';
 
 const app: Application = express();
+app.set("trust proxy", 1);
 const server = createServer(app);
 const PORT = process.env.API_PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
@@ -25,24 +26,27 @@ websocketService.initialize(server);
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS middleware (important for PWA)
+// ✅ Fixed CORS middleware (works in both dev + production)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (process.env.NODE_ENV === 'production') {
-    next();
-  } else {
-    res.header('Access-Control-Allow-Origin', origin || FRONTEND_URL);
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-      return;
-    }
-    
-    next();
+
+  // Always define allowed origin explicitly
+  const allowedOrigin =
+    process.env.NODE_ENV === "production"
+      ? process.env.FRONTEND_URL || "https://www.cuddle-blahaj.win"
+      : origin || "http://localhost:5173";
+
+  res.header("Access-Control-Allow-Origin", allowedOrigin);
+  res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true"); // ✅ allow cookies always
+
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+    return;
   }
+
+  next();
 });
 
 // Health check - MUST be before static files!
