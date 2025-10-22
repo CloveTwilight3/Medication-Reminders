@@ -8,7 +8,7 @@ export default function AuthBot() {
   const navigate = useNavigate();
 
   const handleUserInstall = () => {
-    window.location.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&integration_type=1`;
+    window.location.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&integration_type=1&scope=applications.commands`;
   };
 
   const handleServerInstall = () => {
