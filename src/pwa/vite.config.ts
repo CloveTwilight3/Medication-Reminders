@@ -38,29 +38,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        // CRITICAL: Exclude auth routes from service worker caching
-        navigateFallbackDenylist: [/^\/api\/auth/],
+        // CRITICAL: Exclude ALL API routes from service worker caching
+        navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\/api\/auth\/.*/i,
-            handler: 'NetworkOnly', // Never cache auth requests
-            options: {
-              cacheName: 'auth-cache',
-            }
-          },
-          {
-            urlPattern: /^https:\/\/.*\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 5 // 5 minutes
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
+            // ALL API requests go directly to network, no caching
+            urlPattern: /^https?:\/\/.*\/api\/.*/i,
+            handler: 'NetworkOnly',
           }
         ]
       }
