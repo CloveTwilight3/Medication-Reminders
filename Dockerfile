@@ -35,6 +35,9 @@ RUN cd src/pwa && npm install --include=dev
 # Copy all source code
 COPY src ./src
 
+# Copy database schema
+COPY schema.sql ./
+
 # Build TypeScript (API + Bot)
 RUN npm run build:api
 
@@ -46,7 +49,7 @@ RUN npm run build:pwa
 # Remove dev dependencies to reduce image size
 RUN npm prune --omit=dev && cd src/pwa && npm prune --omit=dev
 
-# Create data directory for JSON storage
+# Create data directory for SQLite database
 RUN mkdir -p /app/data
 
 # Set volume for persistent data

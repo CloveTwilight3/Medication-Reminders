@@ -8,7 +8,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./data:/app/data
+      - ./data:/app/data  # SQLite database stored here
     environment:
       # Core Configuration
       - NODE_ENV=production
@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
     command: npm run start:bot
     volumes:
-      - ./data:/app/data
+      - ./data:/app/data  # Share the same database with API
     environment:
       # Core Configuration
       - NODE_ENV=production
