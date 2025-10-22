@@ -1,9 +1,9 @@
-// src/discord-bot/commands/commandHandlers.ts
-import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from 'discord.js';
+// src/discord-bot/commands/commandHandlers.ts - V2.5 with /dashboard
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { apiClient } from '../services/apiClient';
 import { FrequencyType } from '../../api/types';
 
-const PWA_URL = process.env.PWA_URL || process.env.API_URL?.replace('/api', '') || 'http://localhost:3000';
+const PWA_URL = process.env.PWA_URL || process.env.API_URL?.replace('/api', '') || 'https://www.cuddle-blahaj.win';
 
 const FREQUENCY_DISPLAY: Record<FrequencyType, string> = {
   'daily': 'Daily',
@@ -12,6 +12,79 @@ const FREQUENCY_DISPLAY: Record<FrequencyType, string> = {
   'bi-weekly': 'Bi-weekly (every 2 weeks)',
   'monthly': 'Monthly'
 };
+
+// Main /med command handler that routes to subcommands
+export async function handleMedCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+  const subcommand = interaction.options.getSubcommand();
+
+  switch (subcommand) {
+    case 'add':
+      await handleAddMed(interaction);
+      break;
+    case 'list':
+      await handleListMeds(interaction);
+      break;
+    case 'edit':
+      await handleEditMed(interaction);
+      break;
+    case 'remove':
+      await handleRemoveMed(interaction);
+      break;
+    default:
+      await interaction.reply({
+        content: '❌ Unknown subcommand',
+        flags: MessageFlags.Ephemeral,
+      });
+  }
+}
+
+export async function handleDashboard(interaction: ChatInputCommandInteraction): Promise<void> {
+  try {
+    // Verify user exists
+    const user = await apiClient.getOrCreateUser(interaction.user.id);
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865F2)
+      .setTitle('🌐 Web Dashboard')
+      .setDescription(
+        `Manage your medications from anywhere with our web dashboard!\n\n` +
+        `**Features:**\n` +
+        `• View all your medications\n` +
+        `• Add, edit, and delete medications\n` +
+        `• Real-time sync with Discord\n` +
+        `• Live updates via WebSocket\n` +
+        `• Manage your timezone settings`
+      )
+      .addFields({
+        name: '📱 Access from Any Device',
+        value: 'Works on desktop, tablet, and mobile browsers',
+        inline: false
+      })
+      .setFooter({ text: 'Log in with your Discord account' })
+      .setTimestamp();
+
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setLabel('Open Dashboard')
+          .setStyle(ButtonStyle.Link)
+          .setURL(PWA_URL)
+          .setEmoji('🌐')
+      );
+
+    await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      flags: MessageFlags.Ephemeral,
+    });
+  } catch (error) {
+    console.error('Error handling dashboard command:', error);
+    await interaction.reply({
+      content: `❌ Failed to load dashboard link. Please visit: ${PWA_URL}`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+}
 
 export async function handleAddMed(interaction: ChatInputCommandInteraction): Promise<void> {
   const medName = interaction.options.getString('name', true);
@@ -67,8 +140,24 @@ export async function handleListMeds(interaction: ChatInputCommandInteraction): 
     const userMeds = await apiClient.getUserMedications(user.uid);
 
     if (userMeds.length === 0) {
+      const embed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle('📭 No Medications')
+        .setDescription('You have no medications scheduled. Use `/med add` to add one.')
+        .setFooter({ text: 'Or use /dashboard to manage via web' });
+
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setLabel('Open Dashboard')
+            .setStyle(ButtonStyle.Link)
+            .setURL(PWA_URL)
+            .setEmoji('🌐')
+        );
+
       await interaction.reply({
-        content: '📭 You have no medications scheduled. Use `/addmed` to add one.',
+        embeds: [embed],
+        components: [row],
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -89,10 +178,23 @@ export async function handleListMeds(interaction: ChatInputCommandInteraction): 
           })
           .join('\n\n')
       )
-      .setFooter({ text: '✅ = Taken | ⏳ = Not taken yet' })
+      .setFooter({ text: '✅ = Taken | ⏳ = Not taken yet | Use /dashboard for more options' })
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    const row = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setLabel('Open Dashboard')
+          .setStyle(ButtonStyle.Link)
+          .setURL(PWA_URL)
+          .setEmoji('🌐')
+      );
+
+    await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      flags: MessageFlags.Ephemeral
+    });
   } catch (error) {
     await interaction.reply({
       content: '❌ Failed to retrieve your medications.',
@@ -197,24 +299,28 @@ export async function handleTimezone(interaction: ChatInputCommandInteraction): 
 export async function handleHelp(interaction: ChatInputCommandInteraction): Promise<void> {
   const embed = new EmbedBuilder()
     .setColor(0x5865F2)
-    .setTitle('💊 Medication Reminder Bot - Help (V2)')
+    .setTitle('💊 Medication Reminder Bot - Help (V2.5)')
     .setDescription('Commands to manage your medication reminders:')
     .addFields(
       {
-        name: '/addmed',
+        name: '/med add',
         value: 'Add a medication reminder with optional details\n*Required: name, time, frequency*\n*Optional: dose, amount, instructions*',
       },
       {
-        name: '/listmeds',
+        name: '/med list',
         value: 'List all your scheduled medications with details',
       },
       {
-        name: '/editmed',
-        value: 'Edit an existing medication (cannot change name)\n*Example: `/editmed name:Aspirin time:10:00 dose:20mg`*',
+        name: '/med edit',
+        value: 'Edit an existing medication (cannot change name)\n*Uses autocomplete for medication names*\n*Example: `/med edit name:Aspirin time:10:00`*',
       },
       {
-        name: '/removemed',
-        value: 'Remove a medication reminder\n*Example: `/removemed name:Aspirin`*',
+        name: '/med remove',
+        value: 'Remove a medication reminder\n*Uses autocomplete for medication names*\n*Example: `/med remove name:Aspirin`*',
+      },
+      {
+        name: '/dashboard',
+        value: 'Open the web dashboard to manage medications from any device\n*Full-featured web interface with real-time sync*',
       },
       {
         name: '/timezone',
@@ -226,6 +332,14 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
       }
     )
     .addFields({
+      name: '🆕 What\'s New in V2.5',
+      value:
+        '• **Subcommands**: All medication commands now use `/med` prefix\n' +
+        '• **Autocomplete**: Start typing medication names in edit/remove commands\n' +
+        '• **Dashboard Command**: Quick access to web interface with `/dashboard`\n' +
+        '• **Better Organization**: Cleaner command structure',
+    })
+    .addFields({
       name: '📬 Features',
       value:
         '• **Multiple Frequencies**: Daily, every 2 days, weekly, bi-weekly, monthly\n' +
@@ -235,7 +349,20 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
         '• **DM Reminders**: Receive notifications at scheduled times\n' +
         `• **Web Dashboard**: Manage medications at ${PWA_URL}`,
     })
-    .setFooter({ text: 'Stay healthy! 💙 | Version 2.0' });
+    .setFooter({ text: 'Stay healthy! 💙 | Version 2.5' });
 
-  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  const row = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setLabel('Open Dashboard')
+        .setStyle(ButtonStyle.Link)
+        .setURL(PWA_URL)
+        .setEmoji('🌐')
+    );
+
+  await interaction.reply({
+    embeds: [embed],
+    components: [row],
+    flags: MessageFlags.Ephemeral
+  });
 }

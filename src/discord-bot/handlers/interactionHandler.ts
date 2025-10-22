@@ -1,11 +1,9 @@
-// src/discord-bot/handlers/interactionHandler.ts
-import { Client, Interaction, EmbedBuilder, MessageFlags } from 'discord.js';
+// src/discord-bot/handlers/interactionHandler.ts - V2.5 with /dashboard
+import { Client, Interaction, EmbedBuilder, MessageFlags, AutocompleteInteraction } from 'discord.js';
 import { apiClient } from '../services/apiClient';
 import {
-  handleAddMed,
-  handleListMeds,
-  handleEditMed,
-  handleRemoveMed,
+  handleMedCommand,
+  handleDashboard,
   handleTimezone,
   handleHelp,
 } from '../commands/commandHandlers';
@@ -16,20 +14,21 @@ export async function handleInteraction(
   interaction: Interaction,
   client: Client
 ): Promise<void> {
+  // Handle autocomplete interactions
+  if (interaction.isAutocomplete()) {
+    await handleAutocomplete(interaction);
+    return;
+  }
+
+  // Handle slash command interactions
   if (interaction.isChatInputCommand()) {
     try {
       switch (interaction.commandName) {
-        case 'addmed':
-          await handleAddMed(interaction);
+        case 'med':
+          await handleMedCommand(interaction);
           break;
-        case 'listmeds':
-          await handleListMeds(interaction);
-          break;
-        case 'editmed':
-          await handleEditMed(interaction);
-          break;
-        case 'removemed':
-          await handleRemoveMed(interaction);
+        case 'dashboard':
+          await handleDashboard(interaction);
           break;
         case 'timezone':
           await handleTimezone(interaction);
@@ -60,6 +59,7 @@ export async function handleInteraction(
     }
   }
 
+  // Handle button interactions
   if (interaction.isButton()) {
     try {
       await handleButtonInteraction(interaction);
@@ -78,6 +78,54 @@ export async function handleInteraction(
         });
       }
     }
+  }
+}
+
+async function handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
+  try {
+    const commandName = interaction.commandName;
+    const focusedOption = interaction.options.getFocused(true);
+
+    // Only handle autocomplete for /med edit and /med remove
+    if (commandName !== 'med') {
+      await interaction.respond([]);
+      return;
+    }
+
+    // Only handle 'name' field autocomplete
+    if (focusedOption.name !== 'name') {
+      await interaction.respond([]);
+      return;
+    }
+
+    const discordId = interaction.user.id;
+    const user = await apiClient.getUserByDiscordId(discordId);
+
+    if (!user) {
+      await interaction.respond([]);
+      return;
+    }
+
+    // Get user's medications
+    const medications = await apiClient.getUserMedications(user.uid);
+
+    // Filter medications based on what the user has typed
+    const focusedValue = focusedOption.value.toLowerCase();
+    const filtered = medications
+      .filter(med => med.name.toLowerCase().includes(focusedValue))
+      .slice(0, 25); // Discord limits to 25 choices
+
+    // Return autocomplete choices
+    await interaction.respond(
+      filtered.map(med => ({
+        name: `${med.name} (${med.time} - ${med.frequency})`,
+        value: med.name
+      }))
+    );
+  } catch (error) {
+    console.error('Error handling autocomplete:', error);
+    // Always respond to autocomplete, even if empty
+    await interaction.respond([]);
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "medication-reminders",
-  "version": "2.0.0",
-  "description": "Medication reminder system with Discord bot, REST API, PWA, and real-time WebSocket updates",
+  "version": "2.5.0",
+  "description": "Medication reminder system with Discord bot, REST API, PWA, and real-time WebSocket updates - V2.5 with subcommands and autocomplete",
   "main": "dist/api/index.js",
   "workspaces": [
     "src/pwa"
@@ -32,7 +32,9 @@
     "rest",
     "pwa",
     "websocket",
-    "real-time"
+    "real-time",
+    "autocomplete",
+    "subcommands"
   ],
   "author": "Clove Twilight",
   "license": "MIT",
