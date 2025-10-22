@@ -1,7 +1,7 @@
 {
   "name": "medication-reminders",
-  "version": "1.0.0",
-  "description": "Medication reminder system with Discord bot, REST API, and PWA",
+  "version": "2.0.0",
+  "description": "Medication reminder system with Discord bot, REST API, PWA, and real-time WebSocket updates",
   "main": "dist/api/index.js",
   "workspaces": [
     "src/pwa"
@@ -30,7 +30,9 @@
     "health",
     "api",
     "rest",
-    "pwa"
+    "pwa",
+    "websocket",
+    "real-time"
   ],
   "author": "Clove Twilight",
   "license": "MIT",
@@ -39,13 +41,15 @@
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "node-schedule": "^2.1.1"
+    "node-schedule": "^2.1.1",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
     "@types/node-schedule": "^2.1.7",
+    "@types/ws": "^8.5.13",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }

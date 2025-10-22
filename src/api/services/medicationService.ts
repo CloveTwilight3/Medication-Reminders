@@ -1,6 +1,7 @@
-// src/api/services/medicationService.ts
+// src/api/services/medicationService-updated.ts
 import { storageService } from './storage';
 import { userService } from './userService';
+import { websocketService } from './websocketService';
 import { Medication, CreateMedicationRequest, UpdateMedicationRequest, FrequencyType } from '../types';
 
 export class MedicationService {
@@ -86,7 +87,7 @@ export class MedicationService {
       nextDue.setHours(hours, minutes, 0, 0);
     }
 
-    return this.storage.addMedication(uid, {
+    const medication = this.storage.addMedication(uid, {
       name,
       time,
       frequency,
@@ -95,6 +96,15 @@ export class MedicationService {
       instructions,
       nextDue
     });
+
+    // Send WebSocket notification
+    websocketService.notifyUser(uid, {
+      type: 'medication_added',
+      uid,
+      data: medication
+    });
+
+    return medication;
   }
 
   async getUserMedications(uid: string): Promise<Medication[]> {
@@ -124,6 +134,14 @@ export class MedicationService {
     if (!medication) {
       throw new Error('Medication not found');
     }
+
+    // Send WebSocket notification
+    websocketService.notifyUser(uid, {
+      type: 'medication_updated',
+      uid,
+      data: medication
+    });
+
     return medication;
   }
 
@@ -132,6 +150,14 @@ export class MedicationService {
     if (!success) {
       throw new Error('Medication not found');
     }
+
+    // Send WebSocket notification
+    websocketService.notifyUser(uid, {
+      type: 'medication_deleted',
+      uid,
+      data: { name: medName }
+    });
+
     return true;
   }
 
@@ -152,18 +178,34 @@ export class MedicationService {
       updates.nextDue = this.calculateNextDue(now, med.frequency);
     }
 
-    const success = this.storage.updateMedication(uid, medName, updates);
-    if (!success) {
+    const updatedMed = this.storage.updateMedication(uid, medName, updates);
+    if (!updatedMed) {
       throw new Error('Failed to update medication');
     }
+
+    // Send WebSocket notification
+    websocketService.notifyUser(uid, {
+      type: 'medication_updated',
+      uid,
+      data: updatedMed
+    });
+
     return true;
   }
 
   async markNotTaken(uid: string, medName: string): Promise<boolean> {
-    const success = this.storage.updateMedication(uid, medName, { taken: false });
-    if (!success) {
+    const updatedMed = this.storage.updateMedication(uid, medName, { taken: false });
+    if (!updatedMed) {
       throw new Error('Medication not found');
     }
+
+    // Send WebSocket notification
+    websocketService.notifyUser(uid, {
+      type: 'medication_updated',
+      uid,
+      data: updatedMed
+    });
+
     return true;
   }
 
@@ -222,6 +264,13 @@ export class MedicationService {
         }
       }
       this.storage.saveUserMedications(uid, medications);
+
+      // Send WebSocket notification for each user
+      websocketService.notifyUser(uid, {
+        type: 'medication_updated',
+        uid,
+        data: { message: 'Daily reset completed' }
+      });
     }
 
     console.log('✅ Daily medication status reset for all users');

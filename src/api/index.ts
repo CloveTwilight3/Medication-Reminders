@@ -6,12 +6,15 @@ dotenv.config();
 import express, { Application } from 'express';
 import * as path from 'path';
 import cookieParser from 'cookie-parser';
+import { createServer } from 'http';
 import { errorHandler } from './middleware/errorHandler';
 import { medicationRouter } from './routes/medicationRoutes';
 import { userRouter } from './routes/userRoutes';
 import { authRouter } from './routes/authRoutes';
+import { websocketService } from './services/websocketService';
 
 const app: Application = express();
+const server = createServer(app);
 const PORT = process.env.API_PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
@@ -45,7 +48,14 @@ app.use((req, res, next) => {
 
 // Health check - MUST be before static files!
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    websocket: {
+      active: true,
+      totalConnections: websocketService.getTotalConnections()
+    }
+  });
 });
 
 // API routes - MUST be before static files!
@@ -68,10 +78,14 @@ if (process.env.NODE_ENV === 'production') {
 // Error handling
 app.use(errorHandler);
 
+// Initialize WebSocket server
+websocketService.initialize(server);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✅ API server running on port ${PORT}`);
   console.log(`📡 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔌 WebSocket endpoint: ws://localhost:${PORT}/ws`);
   console.log(`🔐 OAuth callback: ${process.env.DISCORD_REDIRECT_URI}`);
   
   // Debug: Check if env vars are loaded
