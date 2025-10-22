@@ -18,20 +18,19 @@ const server = createServer(app);
 const PORT = process.env.API_PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
+// Initialize WebSocket server FIRST (before any routes)
+websocketService.initialize(server);
+
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
 
 // CORS middleware (important for PWA)
 app.use((req, res, next) => {
-  // In production, allow same origin (no CORS needed)
-  // In development, allow the dev server origin
   const origin = req.headers.origin;
   if (process.env.NODE_ENV === 'production') {
-    // Same origin - no CORS headers needed
     next();
   } else {
-    // Development mode
     res.header('Access-Control-Allow-Origin', origin || FRONTEND_URL);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -68,18 +67,19 @@ if (process.env.NODE_ENV === 'production') {
   const pwaPath = path.join(__dirname, '../pwa');
   app.use(express.static(pwaPath));
   
-  // Serve PWA for any non-API routes (SPA fallback)
-  // This MUST be last!
-  app.get('*', (req, res) => {
+  // Serve PWA for any non-API, non-WebSocket routes (SPA fallback)
+  // CRITICAL: Exclude /ws from catch-all to allow WebSocket upgrades
+  app.get('*', (req, res, next) => {
+    // Skip WebSocket path - let it be handled by WebSocketServer
+    if (req.path === '/ws') {
+      return next();
+    }
     res.sendFile(path.join(pwaPath, 'index.html'));
   });
 }
 
 // Error handling
 app.use(errorHandler);
-
-// Initialize WebSocket server
-websocketService.initialize(server);
 
 // Start server
 server.listen(PORT, () => {
@@ -88,10 +88,8 @@ server.listen(PORT, () => {
   console.log(`🔌 WebSocket endpoint: ws://localhost:${PORT}/ws`);
   console.log(`🔐 OAuth callback: ${process.env.DISCORD_REDIRECT_URI}`);
   
-  // Debug: Check if env vars are loaded
   if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
     console.error('⚠️  WARNING: Discord credentials not found in environment variables!');
-    console.error('Make sure you have a .env file with DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET');
   } else {
     console.log(`✅ Discord OAuth configured`);
   }
