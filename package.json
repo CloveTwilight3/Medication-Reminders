@@ -1,7 +1,7 @@
 {
   "name": "medication-reminders",
   "version": "2.5.0",
-  "description": "Medication reminder system with Discord bot, REST API, PWA, and real-time WebSocket updates - V2.5 with subcommands and autocomplete",
+  "description": "Medication reminder system with Discord bot, REST API, PWA, and real-time WebSocket updates - V2.5 with SQL storage",
   "main": "dist/api/index.js",
   "workspaces": [
     "src/pwa"
@@ -34,11 +34,14 @@
     "websocket",
     "real-time",
     "autocomplete",
-    "subcommands"
+    "subcommands",
+    "sqlite",
+    "sql"
   ],
   "author": "Clove Twilight",
   "license": "MIT",
   "dependencies": {
+    "better-sqlite3": "^11.8.1",
     "cookie-parser": "^1.4.7",
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
@@ -47,6 +50,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",

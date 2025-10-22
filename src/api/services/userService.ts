@@ -1,103 +1,51 @@
-// src/api/services/userService.ts
+// src/api/services/userService.ts - SQL version
+import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import { User, SessionToken, UpdateUserRequest } from '../types';
 import { randomBytes } from 'crypto';
 
+interface DbUser {
+  uid: string;
+  discord_id: string | null;
+  timezone: string;
+  created_at: string;
+  created_via: string;
+  updated_at: string;
+}
+
+interface DbSession {
+  token: string;
+  uid: string;
+  expires_at: string;
+  created_at: string;
+}
+
 export class UserService {
-  private usersPath: string;
-  private sessionsPath: string;
-  private users: { [uid: string]: User } = {};
-  private sessions: { [token: string]: SessionToken } = {};
+  private db: Database.Database;
 
   constructor(dataPath?: string) {
     const baseDir = dataPath || path.join(process.cwd(), 'data');
-    this.usersPath = path.join(baseDir, 'users.json');
-    this.sessionsPath = path.join(baseDir, 'sessions.json');
     
-    this.ensureDataDirectory();
-    this.loadUsers();
-    this.loadSessions();
+    if (!fs.existsSync(baseDir)) {
+      fs.mkdirSync(baseDir, { recursive: true });
+    }
+
+    const dbPath = path.join(baseDir, 'medications.db');
+    this.db = new Database(dbPath);
+    this.db.pragma('foreign_keys = ON');
+    
+    console.log('✅ User service initialized with SQL database');
   }
 
-  private ensureDataDirectory(): void {
-    const dataDir = path.dirname(this.usersPath);
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-  }
-
-  private loadUsers(): void {
-    try {
-      if (fs.existsSync(this.usersPath)) {
-        const data = fs.readFileSync(this.usersPath, 'utf-8');
-        this.users = JSON.parse(data);
-        console.log('✅ Loaded users from file');
-      } else {
-        console.log('📝 No existing users file, starting fresh');
-        this.saveUsers();
-      }
-    } catch (error) {
-      console.error('❌ Error loading users:', error);
-      this.users = {};
-    }
-  }
-
-  private saveUsers(): void {
-    try {
-      fs.writeFileSync(
-        this.usersPath,
-        JSON.stringify(this.users, null, 2),
-        'utf-8'
-      );
-    } catch (error) {
-      console.error('❌ Error saving users:', error);
-      throw new Error('Failed to save users');
-    }
-  }
-
-  private loadSessions(): void {
-    try {
-      if (fs.existsSync(this.sessionsPath)) {
-        const data = fs.readFileSync(this.sessionsPath, 'utf-8');
-        this.sessions = JSON.parse(data);
-        this.cleanExpiredSessions();
-      } else {
-        this.sessions = {};
-        this.saveSessions();
-      }
-    } catch (error) {
-      console.error('❌ Error loading sessions:', error);
-      this.sessions = {};
-    }
-  }
-
-  private saveSessions(): void {
-    try {
-      fs.writeFileSync(
-        this.sessionsPath,
-        JSON.stringify(this.sessions, null, 2),
-        'utf-8'
-      );
-    } catch (error) {
-      console.error('❌ Error saving sessions:', error);
-    }
-  }
-
-  private cleanExpiredSessions(): void {
-    const now = new Date();
-    let changed = false;
-
-    for (const [token, data] of Object.entries(this.sessions)) {
-      if (new Date(data.expiresAt) < now) {
-        delete this.sessions[token];
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      this.saveSessions();
-    }
+  private dbToUser(row: DbUser): User {
+    return {
+      uid: row.uid,
+      discordId: row.discord_id,
+      timezone: row.timezone,
+      createdAt: new Date(row.created_at),
+      createdVia: row.created_via as 'discord' | 'pwa'
+    };
   }
 
   private generateUid(): string {
@@ -113,67 +61,77 @@ export class UserService {
     }
   }
 
-  // Create a new user
   createUser(createdVia: 'discord' | 'pwa', discordId?: string, timezone?: string): User {
     const uid = this.generateUid();
     
-    // Default to UTC if no timezone provided
     let userTimezone = timezone || 'UTC';
-    
-    // Validate timezone
     if (!this.validateTimezone(userTimezone)) {
       console.warn(`Invalid timezone ${userTimezone}, defaulting to UTC`);
       userTimezone = 'UTC';
     }
 
-    const user: User = {
-      uid,
-      discordId: discordId || null,
-      timezone: userTimezone,
-      createdAt: new Date(),
-      createdVia
-    };
+    const stmt = this.db.prepare(`
+      INSERT INTO users (uid, discord_id, timezone, created_via)
+      VALUES (?, ?, ?, ?)
+    `);
 
-    this.users[uid] = user;
-    this.saveUsers();
+    stmt.run(uid, discordId || null, userTimezone, createdVia);
+
+    const user = this.getUser(uid);
+    if (!user) {
+      throw new Error('Failed to create user');
+    }
+
     return user;
   }
 
-  // Update user settings
   updateUser(uid: string, updates: UpdateUserRequest): User | null {
-    const user = this.users[uid];
+    const user = this.getUser(uid);
     if (!user) return null;
 
-    // Validate timezone if provided
     if (updates.timezone) {
       if (!this.validateTimezone(updates.timezone)) {
         throw new Error('Invalid timezone');
       }
-      user.timezone = updates.timezone;
+
+      const stmt = this.db.prepare(`
+        UPDATE users SET timezone = ? WHERE uid = ?
+      `);
+      stmt.run(updates.timezone, uid);
     }
 
-    this.saveUsers();
-    return user;
+    return this.getUser(uid);
   }
 
-  // Get user by UID
   getUser(uid: string): User | null {
-    return this.users[uid] || null;
+    const stmt = this.db.prepare(`
+      SELECT * FROM users WHERE uid = ?
+    `);
+    
+    const row = stmt.get(uid) as DbUser | undefined;
+    return row ? this.dbToUser(row) : null;
   }
 
-  // Get user by Discord ID
   getUserByDiscordId(discordId: string): User | null {
-    return Object.values(this.users).find(u => u.discordId === discordId) || null;
+    const stmt = this.db.prepare(`
+      SELECT * FROM users WHERE discord_id = ?
+    `);
+    
+    const row = stmt.get(discordId) as DbUser | undefined;
+    return row ? this.dbToUser(row) : null;
   }
 
-  // Get all users
   getAllUsers(): User[] {
-    return Object.values(this.users);
+    const stmt = this.db.prepare(`
+      SELECT * FROM users ORDER BY created_at DESC
+    `);
+    
+    const rows = stmt.all() as DbUser[];
+    return rows.map(row => this.dbToUser(row));
   }
 
-  // Link Discord ID to existing UID
   linkDiscordToUser(uid: string, discordId: string): User | null {
-    const user = this.users[uid];
+    const user = this.getUser(uid);
     if (!user) return null;
 
     const existingUser = this.getUserByDiscordId(discordId);
@@ -181,14 +139,16 @@ export class UserService {
       throw new Error('Discord ID already linked to another account');
     }
 
-    user.discordId = discordId;
-    this.saveUsers();
-    return user;
+    const stmt = this.db.prepare(`
+      UPDATE users SET discord_id = ? WHERE uid = ?
+    `);
+    stmt.run(discordId, uid);
+
+    return this.getUser(uid);
   }
 
-  // Generate session token
   generateSessionToken(uid: string): string {
-    const user = this.users[uid];
+    const user = this.getUser(uid);
     if (!user) {
       throw new Error('User not found');
     }
@@ -199,50 +159,56 @@ export class UserService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
-    this.sessions[token] = {
-      uid,
-      expiresAt
-    };
+    const stmt = this.db.prepare(`
+      INSERT INTO sessions (token, uid, expires_at)
+      VALUES (?, ?, ?)
+    `);
+    stmt.run(token, uid, expiresAt.toISOString());
 
-    this.saveSessions();
     return token;
   }
 
-  // Validate session token
   validateSessionToken(token: string): string | null {
     this.cleanExpiredSessions();
 
-    const session = this.sessions[token];
-    if (!session) return null;
-
-    return session.uid;
+    const stmt = this.db.prepare(`
+      SELECT uid FROM sessions 
+      WHERE token = ? AND expires_at > datetime('now')
+    `);
+    
+    const row = stmt.get(token) as { uid: string } | undefined;
+    return row ? row.uid : null;
   }
 
-  // Revoke session token (logout)
   revokeSessionToken(token: string): boolean {
-    if (!this.sessions[token]) return false;
-
-    delete this.sessions[token];
-    this.saveSessions();
-    return true;
+    const stmt = this.db.prepare(`
+      DELETE FROM sessions WHERE token = ?
+    `);
+    
+    const result = stmt.run(token);
+    return result.changes > 0;
   }
 
-  // Delete user and all associated data
-  deleteUser(uid: string): boolean {
-    if (!this.users[uid]) return false;
+  private cleanExpiredSessions(): void {
+    const stmt = this.db.prepare(`
+      DELETE FROM sessions WHERE expires_at <= datetime('now')
+    `);
+    stmt.run();
+  }
 
-    delete this.users[uid];
+  deleteUser(uid: string): boolean {
+    // This will cascade delete medications and sessions due to foreign keys
+    const stmt = this.db.prepare(`
+      DELETE FROM users WHERE uid = ?
+    `);
     
-    // Remove all sessions for this user
-    for (const [token, session] of Object.entries(this.sessions)) {
-      if (session.uid === uid) {
-        delete this.sessions[token];
-      }
-    }
-    
-    this.saveUsers();
-    this.saveSessions();
-    return true;
+    const result = stmt.run(uid);
+    return result.changes > 0;
+  }
+
+  // Utility method to close database (useful for testing)
+  close(): void {
+    this.db.close();
   }
 }
 
