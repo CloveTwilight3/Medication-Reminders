@@ -1,4 +1,3 @@
-// src/pwa/src/hooks/useWebSocket.ts
 import { useEffect, useRef, useCallback, useState } from 'react';
 
 interface WSMessage {
@@ -18,7 +17,7 @@ interface UseWebSocketOptions {
 }
 
 const WS_URL = import.meta.env.VITE_WS_URL || 
-  (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/ws';
+  (window.location.protocol === 'https:' : 'wss:' : 'ws:') + '//' + window.location.host + '/ws';
 
 export function useWebSocket(sessionToken: string | null, options: UseWebSocketOptions = {}) {
   const {
@@ -33,6 +32,7 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const isConnectingRef = useRef(false); // ← PREVENT DUPLICATE CONNECTIONS
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
 
@@ -42,11 +42,19 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
       return;
     }
 
+    // ✅ CRITICAL FIX: Prevent duplicate connections
+    if (isConnectingRef.current) {
+      console.log('Connection already in progress, skipping...');
+      return;
+    }
+
     if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
+      console.log('WebSocket already connected/connecting');
       return;
     }
 
     try {
+      isConnectingRef.current = true; // ← Set guard
       setConnectionStatus('connecting');
       console.log('🔌 Connecting to WebSocket...');
       
@@ -58,6 +66,7 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
         setIsConnected(true);
         setConnectionStatus('connected');
         reconnectAttemptsRef.current = 0;
+        isConnectingRef.current = false; // ← Clear guard on success
         onConnect?.();
       };
 
@@ -76,6 +85,7 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
         setIsConnected(false);
         setConnectionStatus('disconnected');
         wsRef.current = null;
+        isConnectingRef.current = false; // ← Clear guard
         onDisconnect?.();
 
         // Attempt to reconnect
@@ -93,6 +103,7 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+        isConnectingRef.current = false; // ← Clear guard on error
         onError?.(error);
       };
 
@@ -100,6 +111,7 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
       setConnectionStatus('disconnected');
+      isConnectingRef.current = false; // ← Clear guard on exception
     }
   }, [sessionToken, onMessage, onConnect, onDisconnect, onError, reconnectInterval, maxReconnectAttempts]);
 
@@ -114,6 +126,7 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
       wsRef.current = null;
     }
 
+    isConnectingRef.current = false;
     setIsConnected(false);
     setConnectionStatus('disconnected');
   }, []);
@@ -138,7 +151,7 @@ export function useWebSocket(sessionToken: string | null, options: UseWebSocketO
     return () => {
       disconnect();
     };
-  }, [sessionToken, connect, disconnect]);
+  }, [sessionToken]); // ← Only reconnect when token changes
 
   // Send ping every 30 seconds to keep connection alive
   useEffect(() => {
