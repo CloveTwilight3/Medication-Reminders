@@ -30,9 +30,9 @@ export default function Dashboard() {
 
   // Get session token from cookie for WebSocket
   const getSessionToken = () => {
-    const cookies = document.cookie.split(';');
-    const sessionCookie = cookies.find(c => c.trim().startsWith('session_token='));
-    return sessionCookie ? sessionCookie.split('=')[1] : null;
+     const cookies = document.cookie.split(';');
+     const wsCookie = cookies.find(c => c.trim().startsWith('ws_token='));
+     return wsCookie ? wsCookie.split('=')[1] : null;
   };
 
   // WebSocket connection

@@ -38,6 +38,20 @@ function getCookieOptions() {
   };
 }
 
+// NEW: Cookie options for WebSocket token (readable by JavaScript)
+function getWSTokenCookieOptions() {
+  const isProduction = NODE_ENV === 'production';
+  
+  return {
+    httpOnly: false, // ← Allow JavaScript access for WebSocket
+    secure: isProduction,
+    sameSite: 'lax' as const,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/',
+    domain: undefined,
+  };
+}
+
 export class AuthController {
   getDiscordAuthUrl(req: Request, res: Response, next: NextFunction): void {
     try {
@@ -120,10 +134,15 @@ export class AuthController {
 
       // Store user session
       const sessionToken = userService.generateSessionToken(user.uid);
-      const cookieOptions = getCookieOptions();
       
-      res.cookie('session_token', sessionToken, cookieOptions);
-      console.log(`✅ Session cookie set for user ${user.uid}`);
+      // Set TWO cookies:
+      // 1. httpOnly cookie for API authentication (secure)
+      res.cookie('session_token', sessionToken, getCookieOptions());
+      
+      // 2. JavaScript-readable cookie for WebSocket connection (same token)
+      res.cookie('ws_token', sessionToken, getWSTokenCookieOptions());
+      
+      console.log(`✅ Session cookies set for user ${user.uid}`);
 
       // Redirect to frontend dashboard
       res.redirect(`${FRONTEND_URL}/dashboard`);
@@ -135,7 +154,9 @@ export class AuthController {
 
   logout(req: Request, res: Response, next: NextFunction): void {
     try {
+      // Clear both cookies
       res.clearCookie('session_token', getCookieOptions());
+      res.clearCookie('ws_token', getWSTokenCookieOptions());
 
       const response: ApiResponse = {
         success: true,
@@ -164,6 +185,7 @@ export class AuthController {
 
       if (!uid) {
         res.clearCookie('session_token', getCookieOptions());
+        res.clearCookie('ws_token', getWSTokenCookieOptions());
         res.status(401).json({
           success: false,
           error: 'Invalid or expired session'
@@ -175,6 +197,7 @@ export class AuthController {
 
       if (!user) {
         res.clearCookie('session_token', getCookieOptions());
+        res.clearCookie('ws_token', getWSTokenCookieOptions());
         res.status(404).json({
           success: false,
           error: 'User not found'
