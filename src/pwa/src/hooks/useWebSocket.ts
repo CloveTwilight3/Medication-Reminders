@@ -17,7 +17,7 @@ interface UseWebSocketOptions {
 }
 
 const WS_URL = import.meta.env.VITE_WS_URL || 
-  (window.location.protocol === 'https:' : 'wss:' : 'ws:') + '//' + window.location.host + '/ws';
+  (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/ws';
 
 export function useWebSocket(sessionToken: string | null, options: UseWebSocketOptions = {}) {
   const {
