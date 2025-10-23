@@ -37,10 +37,6 @@ export default function Welcome() {
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Never Miss Your Medication.
           </p>
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-900/40 border border-green-600 rounded-full text-sm text-green-300">
-            <Check className="w-4 h-4" />
-            Now In Public Beta 1.0.0!
-          </div>
         </div>
 
         {/* Features Grid */}
@@ -129,7 +125,7 @@ export default function Welcome() {
               GitHub
             </a>
             <span>•</span>
-            <span className="text-primary-400 font-semibold">PTB v1.0.0</span>
+            <span className="text-primary-400 font-semibold">PTB v1.0.2</span>
           </div>
         </footer>
       </div>
