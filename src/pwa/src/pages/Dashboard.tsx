@@ -213,10 +213,10 @@ export default function Dashboard() {
               <Pill className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Medications</h1>
+              <h1 className="text-2xl font-bold text-white">Cuddle Blahaj Medication Reminders</h1>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <span>
-                  {user?.discordId && 'Synced with Discord • '}
+                  {user?.discordId && 'Dashboard • Synced with Discord • '}
                   Timezone: {user?.timezone || 'UTC'}
                 </span>
                 {/* WebSocket Status Indicator */}
@@ -255,38 +255,6 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Live Updates Info */}
-        <div className={`border rounded-lg p-4 mb-6 flex items-center gap-3 transition-colors ${
-          isConnected 
-            ? 'bg-green-900/30 border-green-600' 
-            : 'bg-yellow-900/30 border-yellow-600'
-        }`}>
-          {isConnected ? <Check className="w-5 h-5 text-green-400 flex-shrink-0" /> : <WifiOff className="w-5 h-5 text-yellow-400 flex-shrink-0" />}
-          <div className="flex-1">
-            <p className={`text-sm font-medium ${isConnected ? 'text-green-300' : 'text-yellow-300'}`}>
-              {isConnected ? 'Live Updates Active' : 'Live Updates Disconnected'}
-            </p>
-            <p className={`text-xs mt-1 ${isConnected ? 'text-green-400' : 'text-yellow-400'}`}>
-              {isConnected 
-                ? 'Your medication list will update automatically when changes are made from Discord or other devices.'
-                : 'Changes will appear after page refresh. Attempting to reconnect...'}
-            </p>
-          </div>
-        </div>
-
-        {/* Discord Integration Info */}
-        <div className="bg-green-900/30 border border-green-600 rounded-lg p-4 mb-6 flex items-center gap-3">
-          <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-green-300 text-sm font-medium">
-              Discord Connected • V2 Features Active
-            </p>
-            <p className="text-green-400 text-xs mt-1">
-              Use <code className="bg-green-900/50 px-1 rounded">/addmed</code>, <code className="bg-green-900/50 px-1 rounded">/editmed</code>, <code className="bg-green-900/50 px-1 rounded">/timezone</code> commands in Discord.
-            </p>
-          </div>
-        </div>
-
         {/* Add Button */}
         <div className="mb-6">
           <button

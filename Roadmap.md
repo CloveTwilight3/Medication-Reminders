@@ -18,7 +18,7 @@ Potentially could be using manual input on how per how many days.
 
 Add medication edit system, so you can edit your meds if there ever is any changes to doseages, or how you take it.
 
-# V2.5
+# PTB V1.0.0
 
 Adds WebSocket data to allow live dashboard data
 

@@ -31,14 +31,14 @@ export default function Welcome() {
             <Pill className="w-16 h-16 text-white" />
           </div>
           <h1 className="text-5xl font-bold text-white mb-4">
-            Never Miss Your Medication
+            Cuddle Blahaj Medication Reminders.
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Smart reminders for your health. Get notified on your phone, desktop, and Discord.
+            Never Miss Your Medication.
           </p>
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-900/40 border border-green-600 rounded-full text-sm text-green-300">
             <Check className="w-4 h-4" />
-            Version 2.0 - Now with frequency options and timezone support!
+            Now In Public Beta 1.0.0!
           </div>
         </div>
 
@@ -104,50 +104,8 @@ export default function Welcome() {
             {isLoading ? 'Connecting to Discord...' : 'Login with Discord'}
           </button>
           <p className="text-gray-400 mt-4">
-            Secure OAuth authentication • Free forever • Your timezone will be auto-detected
+            Secure OAuth authentication • Free forever
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            By continuing, you agree to our{' '}
-            <Link to="/terms" className="text-primary-400 hover:text-primary-300 underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-primary-400 hover:text-primary-300 underline">
-              Privacy Policy
-            </Link>
-          </p>
-        </div>
-
-        {/* What's New in V2 */}
-        <div className="mt-16 max-w-3xl mx-auto">
-          <div className="bg-gradient-to-r from-primary-900/40 to-blue-900/40 border border-primary-600 rounded-xl p-8">
-            <h3 className="text-2xl font-bold text-primary-300 mb-4 flex items-center gap-2">
-              <Check className="w-6 h-6" />
-              What's New in Version 2.0
-            </h3>
-            <ul className="space-y-3 text-gray-300">
-              <li className="flex items-start gap-3">
-                <span className="text-primary-400 mt-1">✓</span>
-                <span><strong className="text-white">Multiple Frequency Options:</strong> Daily, every 2 days, weekly, bi-weekly, and monthly schedules</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-primary-400 mt-1">✓</span>
-                <span><strong className="text-white">Timezone Support:</strong> Automatic timezone detection with manual override option</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-primary-400 mt-1">✓</span>
-                <span><strong className="text-white">Medication Details:</strong> Add optional dose, amount, and special instructions</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-primary-400 mt-1">✓</span>
-                <span><strong className="text-white">Edit Medications:</strong> Update time, frequency, and details without deleting</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-primary-400 mt-1">✓</span>
-                <span><strong className="text-white">Better Discord Commands:</strong> New /editmed and /timezone commands</span>
-              </li>
-            </ul>
-          </div>
         </div>
 
         {/* Footer Links */}
@@ -170,7 +128,7 @@ export default function Welcome() {
               GitHub
             </a>
             <span>•</span>
-            <span className="text-primary-400 font-semibold">v2.0</span>
+            <span className="text-primary-400 font-semibold">PTB v1.0.0</span>
           </div>
         </footer>
       </div>
