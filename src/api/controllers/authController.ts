@@ -55,7 +55,13 @@ function getWSTokenCookieOptions() {
 export class AuthController {
   getDiscordAuthUrl(req: Request, res: Response, next: NextFunction): void {
     try {
-      const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+      // Build OAuth URL with state parameter to pass timezone
+      const state = Buffer.from(JSON.stringify({ 
+        timestamp: Date.now(),
+        // We'll detect timezone on the frontend and pass it via redirect
+      })).toString('base64');
+      
+      const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}`;
 
       const response: ApiResponse = {
         success: true,
@@ -70,17 +76,30 @@ export class AuthController {
 
   async handleDiscordCallback(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { code } = req.query;
-      const timezone = req.query.timezone as string | undefined;
+      const { code, state } = req.query;
 
       console.log('🔐 OAuth callback received');
-      console.log('🌍 Timezone:', timezone || 'Not provided');
 
       if (!code || typeof code !== 'string') {
         console.error('❌ No code provided in callback');
         res.redirect(`${FRONTEND_URL}/?error=no_code`);
         return;
       }
+
+      // Decode state if present (contains timezone info from frontend)
+      let timezone = 'UTC';
+      if (state && typeof state === 'string') {
+        try {
+          const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+          if (stateData.timezone) {
+            timezone = stateData.timezone;
+          }
+        } catch (e) {
+          console.log('Could not parse state, using UTC');
+        }
+      }
+
+      console.log('🌍 Timezone:', timezone);
 
       // Exchange code for access token
       const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {

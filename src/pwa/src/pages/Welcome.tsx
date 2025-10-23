@@ -13,8 +13,33 @@ export default function Welcome() {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       console.log('Detected timezone:', detectedTimezone);
 
-      const { url } = await api.getDiscordAuthUrl(detectedTimezone);
-      window.location.href = url;
+      // Get the Discord auth URL from the API
+      const { url: authUrl } = await api.getDiscordAuthUrl();
+      
+      // Add timezone to state parameter
+      const urlObj = new URL(authUrl);
+      const currentState = urlObj.searchParams.get('state') || '{}';
+      
+      // Parse existing state and add timezone
+      let stateData = {};
+      try {
+        stateData = JSON.parse(Buffer.from(currentState, 'base64').toString());
+      } catch (e) {
+        // If state doesn't exist or is invalid, start fresh
+      }
+      
+      stateData = {
+        ...stateData,
+        timezone: detectedTimezone,
+        timestamp: Date.now()
+      };
+      
+      // Encode state with timezone
+      const newState = Buffer.from(JSON.stringify(stateData)).toString('base64');
+      urlObj.searchParams.set('state', newState);
+      
+      // Redirect to Discord OAuth with timezone in state
+      window.location.href = urlObj.toString();
     } catch (error) {
       console.error('Failed to get Discord auth URL:', error);
       alert('Failed to initiate Discord login. Please try again.');
