@@ -296,6 +296,29 @@ export async function handleTimezone(interaction: ChatInputCommandInteraction): 
   }
 }
 
+export async function handleSupport(interaction: ChatInputCommandInteraction): Promise<void> {
+  const supportInviteLink = 'https://discord.gg/k8HrBvDaQn';
+  const embed = new EmbedBuilder()
+    .setColor(0x5865F2)
+    .setTitle('🆘 Support Server')
+    .setDescription('Need help or have questions? Join our support server for assistance and community support!')
+    .setFooter({ text: 'We are here to help you!' })
+    .setTimestamp();
+  const row = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setLabel('Join Support Server')
+        .setStyle(ButtonStyle.Link)
+        .setURL(supportInviteLink)
+        .setEmoji('❓')
+    );
+  await interaction.reply({
+    embeds: [embed],
+    components: [row],
+    flags: MessageFlags.Ephemeral
+  });
+}
+
 export async function handleHelp(interaction: ChatInputCommandInteraction): Promise<void> {
   const embed = new EmbedBuilder()
     .setColor(0x5865F2)

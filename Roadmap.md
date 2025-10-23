@@ -36,3 +36,7 @@ Moving commands to use subcommands,
 ```
 
 Add new `/dashboard` command to allow you to open the webdash.
+
+# PTB V1.0.1
+
+Added `/support` command to invite to the support server

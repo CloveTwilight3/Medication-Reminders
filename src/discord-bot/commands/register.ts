@@ -130,6 +130,13 @@ const commands = [
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
+  // /support command - NEW!
+  new SlashCommandBuilder()
+    .setName('support')
+    .setDescription('Get an invite link to the support server')
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
+
   // /timezone command (unchanged)
   new SlashCommandBuilder()
     .setName('timezone')
