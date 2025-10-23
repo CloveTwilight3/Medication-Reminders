@@ -1,4 +1,9 @@
-// src/api/services/websocketService.ts
+/** src/api/services/websocketService.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
 import { userService } from './userService';

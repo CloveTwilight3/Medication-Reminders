@@ -1,6 +1,6 @@
 {
   "name": "medication-pwa",
-  "version": "1.0.0",
+  "version": "ptb-v1.0.3",
   "private": true,
   "type": "module",
   "scripts": {

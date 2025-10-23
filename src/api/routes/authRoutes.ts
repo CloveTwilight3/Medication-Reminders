@@ -1,4 +1,9 @@
-// src/api/routes/authRoutes.ts
+/** src/api/routes/authRoutes.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Router, Request, Response, NextFunction } from 'express';
 import { authController } from '../controllers/authController';
 

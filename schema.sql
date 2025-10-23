@@ -1,4 +1,7 @@
 -- schema.sql - Medication Reminders Database Schema
+-- @license MIT
+-- Copyright (c) 2025 Clove Twilight
+-- See LICENSE file in the root directory for full license text.
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (

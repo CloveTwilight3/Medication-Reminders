@@ -1,4 +1,9 @@
-// src/api/controllers/authController.ts
+/** src/api/controllers/authController.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import { userService } from '../services/userService';
 import { ApiResponse } from '../types';

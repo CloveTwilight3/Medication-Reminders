@@ -1,11 +1,18 @@
-// src/pwa/src/pages/Dashboard.tsx
+/** src/pwa/src/pages/Dashboard.tsx
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Pill, LogOut, Trash2, Check, Edit2, Settings, Clock, Wifi, WifiOff } from 'lucide-react';
+import { Plus, Pill, LogOut, Trash2, Check, Edit2, Settings, Clock, Wifi, WifiOff, Bell, BellOff } from 'lucide-react';
 import { api } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { Medication, FrequencyType, FREQUENCY_OPTIONS, TIMEZONE_OPTIONS } from '../types';
+import { notificationService } from '../services/notificationService';
+import NotificationPermissionModal from '../components/NotificationPermissionModal';
 
 export default function Dashboard() {
   const { uid, user, logout } = useUser();
@@ -18,6 +25,11 @@ export default function Dashboard() {
   const [editingMed, setEditingMed] = useState<Medication | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedTimezone, setSelectedTimezone] = useState(user?.timezone || 'UTC');
+  
+  // Notification states
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   
   const [newMedName, setNewMedName] = useState('');
   const [newMedTime, setNewMedTime] = useState('');
@@ -46,8 +58,22 @@ export default function Dashboard() {
       switch (message.type) {
         case 'medication_added':
         case 'medication_updated':
-        case 'medication_deleted':
           // Reload medications when any change occurs
+          loadMedications();
+          
+          // Show notification if a medication was updated and is now due
+          if (message.type === 'medication_updated' && message.data) {
+            const med = message.data as Medication;
+            if (!med.taken && notificationsEnabled) {
+              notificationService.showMedicationReminder(
+                med.name,
+                med.time,
+                med.dose ? `Dose: ${med.dose}` : undefined
+              );
+            }
+          }
+          break;
+        case 'medication_deleted':
           loadMedications();
           break;
       }
@@ -62,6 +88,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadMedications();
+    checkNotificationStatus();
   }, [uid]);
 
   useEffect(() => {
@@ -69,6 +96,101 @@ export default function Dashboard() {
       setSelectedTimezone(user.timezone);
     }
   }, [user]);
+
+  // Check notification permission status on mount
+  const checkNotificationStatus = () => {
+    if (!notificationService.isSupported()) {
+      console.warn('Notifications not supported in this browser');
+      return;
+    }
+
+    const permission = notificationService.getPermissionStatus();
+    setNotificationPermission(permission);
+
+    const enabled = notificationService.areNotificationsEnabled();
+    setNotificationsEnabled(enabled);
+
+    // Show modal if user hasn't made a decision yet and hasn't seen the modal before
+    const hasSeenModal = localStorage.getItem('notification_modal_seen');
+    if (permission === 'default' && !hasSeenModal) {
+      // Show modal after a short delay so user can see the dashboard first
+      setTimeout(() => {
+        setShowNotificationModal(true);
+      }, 2000);
+    }
+  };
+
+  const handleAllowNotifications = async () => {
+    try {
+      const permission = await notificationService.requestPermission();
+      setNotificationPermission(permission);
+      
+      if (permission === 'granted') {
+        notificationService.setNotificationsEnabled(true);
+        setNotificationsEnabled(true);
+        
+        // Show a test notification
+        await notificationService.showNotification(
+          '🎉 Notifications Enabled!',
+          {
+            body: 'You\'ll now receive medication reminders',
+            requireInteraction: false
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    } finally {
+      localStorage.setItem('notification_modal_seen', 'true');
+      setShowNotificationModal(false);
+    }
+  };
+
+  const handleDenyNotifications = () => {
+    notificationService.setNotificationsEnabled(false);
+    setNotificationsEnabled(false);
+    localStorage.setItem('notification_modal_seen', 'true');
+    setShowNotificationModal(false);
+  };
+
+  const handleToggleNotifications = async () => {
+    if (!notificationsEnabled) {
+      // User wants to enable notifications
+      if (notificationPermission === 'granted') {
+        // Already have permission, just toggle
+        notificationService.setNotificationsEnabled(true);
+        setNotificationsEnabled(true);
+      } else if (notificationPermission === 'default') {
+        // Need to request permission
+        try {
+          const permission = await notificationService.requestPermission();
+          setNotificationPermission(permission);
+          
+          if (permission === 'granted') {
+            notificationService.setNotificationsEnabled(true);
+            setNotificationsEnabled(true);
+            
+            await notificationService.showNotification(
+              '🎉 Notifications Enabled!',
+              {
+                body: 'You\'ll now receive medication reminders',
+                requireInteraction: false
+              }
+            );
+          }
+        } catch (error) {
+          console.error('Error requesting notification permission:', error);
+        }
+      } else {
+        // Permission denied, show instructions
+        alert('Notification permission was denied. Please enable notifications in your browser settings to receive reminders.');
+      }
+    } else {
+      // User wants to disable notifications
+      notificationService.setNotificationsEnabled(false);
+      setNotificationsEnabled(false);
+    }
+  };
 
   const loadMedications = async () => {
     if (!uid) return;
@@ -231,6 +353,13 @@ export default function Dashboard() {
                     {connectionStatus === 'connecting' ? 'Connecting...' : 'Offline'}
                   </span>
                 )}
+                {/* Notification Status Indicator */}
+                {notificationService.isSupported() && (
+                  <span className={`flex items-center gap-1 ${notificationsEnabled ? 'text-green-400' : 'text-gray-500'}`}>
+                    {notificationsEnabled ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
+                    {notificationsEnabled ? 'Notifications On' : 'Notifications Off'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -364,6 +493,18 @@ export default function Dashboard() {
           color-scheme: dark;
         }
       `}</style>
+
+      {/* Notification Permission Modal */}
+      {showNotificationModal && (
+        <NotificationPermissionModal
+          onAllow={handleAllowNotifications}
+          onDeny={handleDenyNotifications}
+          onClose={() => {
+            localStorage.setItem('notification_modal_seen', 'true');
+            setShowNotificationModal(false);
+          }}
+        />
+      )}
 
       {/* Add Medication Modal */}
       {showAddModal && (
@@ -617,6 +758,38 @@ export default function Dashboard() {
                   Your medication reminders will be sent based on this timezone
                 </p>
               </div>
+
+              {/* Notification Toggle */}
+              {notificationService.isSupported() && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Browser Notifications
+                  </label>
+                  <button
+                    onClick={handleToggleNotifications}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+                      notificationsEnabled
+                        ? 'bg-primary-900/30 border-primary-600 text-primary-300'
+                        : 'bg-gray-900 border-gray-700 text-gray-400'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {notificationsEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                      {notificationsEnabled ? 'Notifications Enabled' : 'Notifications Disabled'}
+                    </span>
+                    <span className="text-xs">
+                      {notificationPermission === 'denied' && '(Blocked in browser)'}
+                    </span>
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {notificationsEnabled
+                      ? 'You\'ll receive browser notifications when medications are due'
+                      : notificationPermission === 'denied'
+                      ? 'Enable notifications in your browser settings to receive reminders'
+                      : 'Enable to receive browser notifications for medication reminders'}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex gap-3">
               <button

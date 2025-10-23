@@ -1,4 +1,9 @@
-// src/api/services/userService.ts - SQL version
+/** src/api/services/userService.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';

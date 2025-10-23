@@ -1,4 +1,9 @@
-// src/discord-bot/index.ts
+/** src/discord-bot/index.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Client, GatewayIntentBits } from 'discord.js';
 import * as dotenv from 'dotenv';
 import { registerCommands } from './commands/register';

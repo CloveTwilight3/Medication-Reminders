@@ -1,4 +1,9 @@
-// src/api/routes/medicationRoutes.ts
+/** src/api/routes/medicationRoutes.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Router } from 'express';
 import { medicationController } from '../controllers/medicationController';
 

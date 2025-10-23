@@ -1,4 +1,9 @@
-// src/api/middleware/errorHandler.ts
+/** src/api/middleware/errorHandler.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import { ApiResponse } from '../types';
 

@@ -1,4 +1,9 @@
-// src/discord-bot/services/scheduler.ts
+/** src/discord-bot/services/scheduler.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Client } from 'discord.js';
 import schedule from 'node-schedule';
 import { apiClient } from './apiClient';

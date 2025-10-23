@@ -1,4 +1,9 @@
-// src/pwa/src/App.tsx
+/** src/pwa/src/App.tsx
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider, useUser } from './contexts/UserContext';
 import Welcome from './pages/Welcome';

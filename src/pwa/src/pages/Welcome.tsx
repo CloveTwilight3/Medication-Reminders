@@ -1,4 +1,9 @@
-// src/pwa/src/pages/Welcome.tsx
+/** src/pwa/src/pages/Welcome.tsx
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pill, Bell, MessageCircle, Check, Clock } from 'lucide-react';
@@ -32,10 +37,10 @@ export default function Welcome() {
             <Pill className="w-16 h-16 text-white" />
           </div>
           <h1 className="text-5xl font-bold text-white mb-4">
-            Cuddle Blahaj Medication Reminders.
+            Cuddle Blahaj Medications
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Never Miss Your Medication.
+            Never miss your medication with smart reminders from Cuddle Blahaj
           </p>
         </div>
 
@@ -125,8 +130,11 @@ export default function Welcome() {
               GitHub
             </a>
             <span>•</span>
-            <span className="text-primary-400 font-semibold">PTB v1.0.2</span>
+            <span className="text-primary-400 font-semibold">PTB v1.0.3</span>
           </div>
+          <p className="text-gray-600 mt-4 text-xs">
+            Cuddle Blahaj Medications • Never miss your meds
+          </p>
         </footer>
       </div>
     </div>

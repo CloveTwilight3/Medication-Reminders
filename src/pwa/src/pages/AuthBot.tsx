@@ -1,4 +1,9 @@
-// src/pwa/src/pages/AuthBot.tsx
+/** src/pwa/src/pages/AuthBot.tsx
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { useNavigate } from 'react-router-dom';
 import { Bot, ArrowLeft, User, Server } from 'lucide-react';
 
@@ -31,12 +36,11 @@ export default function AuthBot() {
             <Bot className="w-16 h-16 text-primary-400" />
           </div>
 
-          <h1 className="text-3xl font-bold text-white mb-4">
-            Add Medication Bot
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Add Cuddle Blahaj Medications Bot
           </h1>
-
-          <p className="text-gray-300 mb-6">
-            Choose how you want to install the bot:
+          <p className="text-gray-400 mb-6">
+            Get medication reminders directly in Discord
           </p>
         </div>
 
@@ -52,7 +56,7 @@ export default function AuthBot() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">User Install</h3>
               <p className="text-sm text-gray-400 mb-4">
-                Recommended for personal use
+                ✨ Recommended for personal use
               </p>
               <ul className="text-xs text-gray-500 text-left space-y-1">
                 <li>✓ Works everywhere you go</li>
@@ -86,14 +90,14 @@ export default function AuthBot() {
         </div>
 
         {/* Info Box */}
-        <div className="bg-blue-900/30 border border-blue-600 rounded-xl p-4">
+        <div className="bg-blue-900/30 border border-blue-600 rounded-xl p-4 mb-6">
           <p className="text-blue-200 text-sm">
             <strong className="text-blue-300">💡 Tip:</strong> User install is recommended for personal medication tracking. 
             Your reminders will work in any server or DM without needing to add the bot to each server.
           </p>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-700">
+        <div className="pt-6 border-t border-gray-700">
           <h3 className="font-semibold text-white mb-3 text-center">After Installation:</h3>
           <ol className="text-sm text-gray-300 space-y-2">
             <li className="flex gap-2">
@@ -109,6 +113,12 @@ export default function AuthBot() {
               <span>Add your medications and receive reminders!</span>
             </li>
           </ol>
+        </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500">
+            Cuddle Blahaj Medications • Version PTB v1.0.2
+          </p>
         </div>
       </div>
     </div>

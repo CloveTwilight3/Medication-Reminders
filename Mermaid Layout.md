@@ -1,6 +1,11 @@
 ```mermaid
+
+%% @license MIT
+%% Copyright (c) 2025 Clove Twilight
+%% See LICENSE file in the root directory for full license text.
+
 %% Medication Reminder System - Complete Workflow
-%% Version: PTB v1.0.2
+%% Version: PTB v1.0.3
 
 graph TB
     %% User Entry Points

@@ -1,4 +1,9 @@
-// src/pwa/vite.config.ts
+/** src/pwa/vite.config.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -10,11 +15,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Medication Reminder',
-        short_name: 'MedReminder',
-        description: 'Never miss your medication with smart reminders',
+        name: 'Cuddle Blahaj Medications',
+        short_name: 'Cuddle Blahaj',
+        description: 'Never miss your medication with smart reminders from Cuddle Blahaj',
         theme_color: '#5865F2',
-        background_color: '#ffffff',
+        background_color: '#111827',
         display: 'standalone',
         icons: [
           {

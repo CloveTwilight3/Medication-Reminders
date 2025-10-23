@@ -1,4 +1,9 @@
-// src/pwa/src/contexts/UserContext.tsx
+/** src/pwa/src/contexts/UserContext.tsx
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserContextType } from '../types';
 import { api } from '../services/api';

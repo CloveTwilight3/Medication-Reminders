@@ -1,4 +1,9 @@
-// src/api/services/storage.ts - SQL version
+/** src/api/services/storage.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import Database from 'better-sqlite3';
 import { Medication } from '../types';
 import * as fs from 'fs';

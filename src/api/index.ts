@@ -1,4 +1,9 @@
-// src/api/index.ts
+/** src/api/index.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import * as dotenv from 'dotenv';
 // Load environment variables FIRST before importing anything else
 dotenv.config();

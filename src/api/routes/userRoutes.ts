@@ -1,4 +1,9 @@
-// src/api/routes/userRoutes.ts
+/** src/api/routes/userRoutes.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Router } from 'express';
 import { userController } from '../controllers/userController';
 

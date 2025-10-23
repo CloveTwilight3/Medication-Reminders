@@ -1,4 +1,9 @@
-// src/api/services/medicationService-updated.ts
+/** src/api/services/medicationService.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { storageService } from './storage';
 import { userService } from './userService';
 import { websocketService } from './websocketService';

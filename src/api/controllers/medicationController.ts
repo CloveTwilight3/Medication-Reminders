@@ -1,4 +1,9 @@
-// src/api/controllers/medicationController.ts
+/** src/api/controllers/medicationController.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import { medicationService } from '../services/medicationService';
 import { ApiResponse } from '../types';

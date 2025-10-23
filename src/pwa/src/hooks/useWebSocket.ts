@@ -1,3 +1,9 @@
+/** src/pwa/src/hooks/useWebSocket.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { useEffect, useRef, useCallback, useState } from 'react';
 
 interface WSMessage {

@@ -1,4 +1,9 @@
-// src/pwa/src/services/api.ts
+/** src/pwa/src/services/api.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { User, Medication, ApiResponse, FrequencyType } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';

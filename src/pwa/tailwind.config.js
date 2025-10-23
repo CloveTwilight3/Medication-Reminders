@@ -1,4 +1,9 @@
-// src/pwa/tailwind.config.js
+/** src/pwa/tailwind.config.js
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [

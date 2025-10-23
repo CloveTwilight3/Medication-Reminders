@@ -1,4 +1,4 @@
-# V1
+# Alpha V1
 
 Will be a basic daily reminder for your medicatons, nothing too flashy just yet.
 
@@ -6,7 +6,7 @@ Works only in UTC at the moment!
 
 JSON Data Storage
 
-# V2
+# Alpha V2
 
 Will include other alert types, daily, 2-daily, weekly, bi-weekly, monthly etc.
 
@@ -44,3 +44,7 @@ Added `/support` command to invite to the support server
 # PTB V1.0.2
 
 Fixed images on website, updated `src/pwa/index.html` to update the embed tags, fixed broken OAuth webflow. 
+
+# PTB v1.0.3
+
+Made vers consistant, added licening, added PWA notifs

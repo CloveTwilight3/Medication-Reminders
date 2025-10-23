@@ -1,4 +1,8 @@
-// src/pwa/src/types/index.ts
+/** src/pwa/src/types/index.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
 
 export type FrequencyType = 'daily' | 'every-2-days' | 'weekly' | 'bi-weekly' | 'monthly';
 

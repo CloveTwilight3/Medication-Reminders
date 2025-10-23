@@ -1,3 +1,8 @@
+# Dockerfile
+# @license MIT
+# Copyright (c) 2025 Clove Twilight
+# See LICENSE file in the root directory for full license text.
+
 # Use Ubuntu base image
 FROM ubuntu:22.04
 

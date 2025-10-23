@@ -1,4 +1,9 @@
-// src/discord-bot/commands/register.ts - V2.5 with /dashboard
+/** src/discord-bot/commands/register.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Client, REST, Routes, SlashCommandBuilder } from 'discord.js';
 
 const commands = [

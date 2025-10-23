@@ -1,4 +1,9 @@
-// src/discord-bot/handlers/interactionHandler.ts - V2.5 with /dashboard
+/** src/discord-bot/handlers/interactionHandler.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Client, Interaction, EmbedBuilder, MessageFlags, AutocompleteInteraction } from 'discord.js';
 import { apiClient } from '../services/apiClient';
 import {

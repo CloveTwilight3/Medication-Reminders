@@ -1,4 +1,9 @@
-// src/api/controllers/userController.ts
+/** src/api/controllers/userController.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import { userService } from '../services/userService';
 import { ApiResponse, CreateUserRequest, LinkDiscordRequest, UpdateUserRequest } from '../types';

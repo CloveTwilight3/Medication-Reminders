@@ -1,4 +1,9 @@
-// src/discord-bot/services/reminderService.ts
+/** src/discord-bot/services/reminderService.ts
+ * @license MIT
+ * Copyright (c) 2025 Clove Twilight
+ * See LICENSE file in the root directory for full license text.
+ */
+
 import { Client, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { Medication, FrequencyType } from '../types';
 
