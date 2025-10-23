@@ -28,9 +28,9 @@ class ApiClient {
 
   // ========== AUTH ==========
 
-  async getDiscordAuthUrl(timezone?: string): Promise<{ url: string }> {
+  async getDiscordAuthUrl(): Promise<{ url: string }> {
     // The /auth/discord endpoint returns a Discord OAuth URL
-    // The timezone will be captured during the OAuth callback
+    // Timezone will default to UTC and can be changed in settings
     return this.request<{ url: string }>('/auth/discord');
   }
 

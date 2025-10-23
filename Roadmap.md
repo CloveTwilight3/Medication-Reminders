@@ -22,7 +22,7 @@ Add medication edit system, so you can edit your meds if there ever is any chang
 
 Adds WebSocket data to allow live dashboard data
 
-Tightens security to use a SQL storage server
+Tighten security to use a SQL storage server
 
 Moving commands to use subcommands, 
 
@@ -40,3 +40,7 @@ Add new `/dashboard` command to allow you to open the webdash.
 # PTB V1.0.1
 
 Added `/support` command to invite to the support server
+
+# PTB V1.0.2
+
+Fixed images on website, fixed broken OAuth webflow. 
