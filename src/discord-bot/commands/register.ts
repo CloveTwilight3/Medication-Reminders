@@ -128,21 +128,21 @@ const commands = [
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
-  // /dashboard command - NEW!
+  // /dashboard command
   new SlashCommandBuilder()
     .setName('dashboard')
     .setDescription('Open the web dashboard to manage your medications')
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
-  // /support command - NEW!
+  // /support command
   new SlashCommandBuilder()
     .setName('support')
     .setDescription('Get an invite link to the support server')
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
-  // /timezone command (unchanged)
+  // /timezone command with autocomplete - UPDATED
   new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Set your timezone for accurate reminders')
@@ -151,11 +151,12 @@ const commands = [
         .setName('timezone')
         .setDescription('Your timezone (e.g., America/New_York, Europe/London)')
         .setRequired(true)
+        .setAutocomplete(true) // ✅ Enable autocomplete for timezone
     )
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
-  // /help command (unchanged)
+  // /help command
   new SlashCommandBuilder()
     .setName('help')
     .setDescription('Show help information about the medication bot')
@@ -173,14 +174,14 @@ export async function registerCommands(client: Client): Promise<void> {
   try {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
 
-    console.log('Started refreshing application (/) commands for V2.5 (subcommands + dashboard).');
+    console.log('Started refreshing application (/) commands for V2.5 (subcommands + dashboard + timezone autocomplete).');
 
     await rest.put(
       Routes.applicationCommands(client.user!.id),
       { body: commands }
     );
 
-    console.log('✅ Successfully registered V2.5 commands with subcommands and /dashboard.');
+    console.log('✅ Successfully registered V2.5 commands with subcommands, /dashboard, and timezone autocomplete.');
     console.log('ℹ️  Integration Types: GUILD_INSTALL (0), USER_INSTALL (1)');
     console.log('ℹ️  Contexts: GUILD (0), BOT_DM (1), PRIVATE_CHANNEL (2)');
   } catch (error) {

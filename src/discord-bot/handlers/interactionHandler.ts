@@ -16,6 +16,41 @@ import {
 
 const pendingReminders = new Map<string, NodeJS.Timeout>();
 
+// List of common timezones for autocomplete
+const TIMEZONE_OPTIONS = [
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Anchorage',
+  'Pacific/Honolulu',
+  'America/Toronto',
+  'America/Mexico_City',
+  'America/Sao_Paulo',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Rome',
+  'Europe/Madrid',
+  'Europe/Athens',
+  'Europe/Moscow',
+  'Africa/Cairo',
+  'Africa/Johannesburg',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Asia/Bangkok',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Seoul',
+  'Asia/Singapore',
+  'Asia/Hong_Kong',
+  'Australia/Sydney',
+  'Australia/Melbourne',
+  'Australia/Perth',
+  'Pacific/Auckland',
+  'UTC'
+];
+
 export async function handleInteraction(
   interaction: Interaction,
   client: Client
@@ -95,42 +130,60 @@ async function handleAutocomplete(interaction: AutocompleteInteraction): Promise
     const commandName = interaction.commandName;
     const focusedOption = interaction.options.getFocused(true);
 
-    // Only handle autocomplete for /med edit and /med remove
-    if (commandName !== 'med') {
-      await interaction.respond([]);
+    // Handle /med edit and /med remove autocomplete
+    if (commandName === 'med' && focusedOption.name === 'name') {
+      const discordId = interaction.user.id;
+      const user = await apiClient.getUserByDiscordId(discordId);
+
+      if (!user) {
+        await interaction.respond([]);
+        return;
+      }
+
+      // Get user's medications
+      const medications = await apiClient.getUserMedications(user.uid);
+
+      // Filter medications based on what the user has typed
+      const focusedValue = focusedOption.value.toLowerCase();
+      const filtered = medications
+        .filter(med => med.name.toLowerCase().includes(focusedValue))
+        .slice(0, 25); // Discord limits to 25 choices
+
+      // Return autocomplete choices
+      await interaction.respond(
+        filtered.map(med => ({
+          name: `${med.name} (${med.time} - ${med.frequency})`,
+          value: med.name
+        }))
+      );
       return;
     }
 
-    // Only handle 'name' field autocomplete
-    if (focusedOption.name !== 'name') {
-      await interaction.respond([]);
+    // ✅ Handle /timezone autocomplete
+    if (commandName === 'timezone' && focusedOption.name === 'timezone') {
+      const focusedValue = focusedOption.value.toLowerCase();
+      
+      // Filter timezones based on what the user has typed
+      const filtered = TIMEZONE_OPTIONS
+        .filter(tz => tz.toLowerCase().includes(focusedValue))
+        .slice(0, 25); // Discord limits to 25 choices
+
+      // Return autocomplete choices with friendly names
+      await interaction.respond(
+        filtered.map(tz => {
+          // Create a friendly display name
+          const displayName = tz.replace(/_/g, ' ');
+          return {
+            name: displayName,
+            value: tz
+          };
+        })
+      );
       return;
     }
 
-    const discordId = interaction.user.id;
-    const user = await apiClient.getUserByDiscordId(discordId);
-
-    if (!user) {
-      await interaction.respond([]);
-      return;
-    }
-
-    // Get user's medications
-    const medications = await apiClient.getUserMedications(user.uid);
-
-    // Filter medications based on what the user has typed
-    const focusedValue = focusedOption.value.toLowerCase();
-    const filtered = medications
-      .filter(med => med.name.toLowerCase().includes(focusedValue))
-      .slice(0, 25); // Discord limits to 25 choices
-
-    // Return autocomplete choices
-    await interaction.respond(
-      filtered.map(med => ({
-        name: `${med.name} (${med.time} - ${med.frequency})`,
-        value: med.name
-      }))
-    );
+    // Default: respond with empty array for unknown autocomplete
+    await interaction.respond([]);
   } catch (error) {
     console.error('Error handling autocomplete:', error);
     // Always respond to autocomplete, even if empty

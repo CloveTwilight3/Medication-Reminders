@@ -16,7 +16,7 @@ export function setupScheduler(client: Client): void {
     checkMedicationReminders(client);
   });
 
-  // Reset taken status at midnight
+  // Reset taken status at midnight UTC
   schedule.scheduleJob('0 0 * * *', async () => {
     try {
       await apiClient.resetDailyMedications();
@@ -27,26 +27,40 @@ export function setupScheduler(client: Client): void {
   });
 
   console.log('✅ Medication scheduler initialized');
+  console.log('ℹ️  Checking medications every minute');
+  console.log('ℹ️  Daily reset at midnight UTC');
 }
 
 async function checkMedicationReminders(client: Client): Promise<void> {
   try {
+    const now = new Date();
+    const currentHour = now.getUTCHours();
+    const currentMinute = now.getUTCMinutes();
+    
+    console.log(`🕐 [${now.toISOString()}] Checking medications (UTC ${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')})`);
+
     const dueMedications = await apiClient.getMedicationsDueNow();
 
-    for (const { uid, medication } of dueMedications) {
+    if (dueMedications.length > 0) {
+      console.log(`📋 Found ${dueMedications.length} medication(s) due for reminders`);
+    }
+
+    for (const { uid, medication, userTimezone } of dueMedications) {
       // Get user info to find Discord ID
       try {
         const user = await apiClient.getUser(uid);
         
         // Only send Discord reminders if user has linked Discord
         if (!user.discordId) {
-          console.log(`User ${uid} has no Discord ID linked, skipping Discord reminder`);
+          console.log(`⚠️  User ${uid} has no Discord ID linked, skipping Discord reminder`);
           // Mark reminder as sent so we don't keep trying
           await apiClient.updateMedication(uid, medication.name, {
             reminderSent: true
           });
           continue;
         }
+
+        console.log(`📤 Sending reminder to ${user.discordId} for ${medication.name} (Timezone: ${userTimezone})`);
 
         // Send initial reminder via Discord
         await sendMedicationReminder(client, user.discordId, medication);
@@ -56,8 +70,9 @@ async function checkMedicationReminders(client: Client): Promise<void> {
           await apiClient.updateMedication(uid, medication.name, {
             reminderSent: true
           });
+          console.log(`✅ Marked ${medication.name} reminder as sent for user ${uid}`);
         } catch (error) {
-          console.error(`Failed to update reminder status for ${medication.name}:`, error);
+          console.error(`❌ Failed to update reminder status for ${medication.name}:`, error);
         }
 
         // Schedule follow-up reminder in 1 hour if not taken
@@ -67,16 +82,19 @@ async function checkMedicationReminders(client: Client): Promise<void> {
             // Check if medication has been taken
             const currentMed = await apiClient.getMedication(uid, medication.name);
             if (!currentMed.taken && user.discordId) {
+              console.log(`📤 Sending follow-up reminder for ${medication.name} to user ${uid}`);
               await sendFollowUpReminder(client, user.discordId, medication);
+            } else {
+              console.log(`ℹ️  Skipping follow-up for ${medication.name} - already taken`);
             }
           } catch (error) {
-            console.error(`Failed to send follow-up for ${medication.name}:`, error);
+            console.error(`❌ Failed to send follow-up for ${medication.name}:`, error);
           }
         }, 60 * 60 * 1000); // 1 hour
 
         setPendingReminder(reminderId, timeout);
       } catch (error) {
-        console.error(`Failed to get user info for uid ${uid}:`, error);
+        console.error(`❌ Failed to get user info for uid ${uid}:`, error);
       }
     }
   } catch (error) {

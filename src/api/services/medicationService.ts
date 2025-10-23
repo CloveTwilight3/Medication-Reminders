@@ -216,8 +216,10 @@ export class MedicationService {
 
   async getMedicationsDueNow(): Promise<{ uid: string; medication: Medication; userTimezone: string }[]> {
     const now = new Date();
-    const currentHour = now.getUTCHours();
-    const currentMinute = now.getUTCMinutes();
+    const currentUTCHour = now.getUTCHours();
+    const currentUTCMinute = now.getUTCMinutes();
+    
+    console.log(`🔍 Checking medications at UTC ${currentUTCHour.toString().padStart(2, '0')}:${currentUTCMinute.toString().padStart(2, '0')}`);
     
     const allMedications = this.storage.getAllUserMedications();
     const dueNow: { uid: string; medication: Medication; userTimezone: string }[] = [];
@@ -225,28 +227,55 @@ export class MedicationService {
     for (const userMeds of allMedications) {
       // Get user timezone
       const user = userService.getUser(userMeds.uid);
-      if (!user) continue;
+      if (!user) {
+        console.log(`⚠️  No user found for UID: ${userMeds.uid}`);
+        continue;
+      }
+
+      console.log(`👤 Checking ${userMeds.medications.length} medication(s) for user ${user.uid} (Timezone: ${user.timezone})`);
 
       for (const med of userMeds.medications) {
-        // Convert med time from user's timezone to UTC
+        // Skip if reminder already sent
+        if (med.reminderSent) {
+          continue;
+        }
+
+        // Parse medication time
         const [medHour, medMinute] = med.time.split(':').map(Number);
         
-        // Create a date in user's timezone
-        const userDate = new Date(now.toLocaleString('en-US', { timeZone: user.timezone }));
-        userDate.setHours(medHour, medMinute, 0, 0);
-        
-        // Convert to UTC for comparison
-        const utcHour = userDate.getUTCHours();
-        const utcMinute = userDate.getUTCMinutes();
-        
-        // Check if it's time for this medication
-        const isTimeMatch = utcHour === currentHour && utcMinute === currentMinute;
-        const isDue = this.isMedicationDue(med, user.timezone);
-        
-        if (isTimeMatch && isDue && !med.reminderSent) {
-          dueNow.push({ uid: userMeds.uid, medication: med, userTimezone: user.timezone });
+        // Convert medication time from user's timezone to UTC
+        try {
+          // Create a date object in the user's timezone
+          const nowInUserTZ = new Date(now.toLocaleString('en-US', { timeZone: user.timezone }));
+          
+          // Create the target time today in user's timezone
+          const targetTimeUserTZ = new Date(nowInUserTZ);
+          targetTimeUserTZ.setHours(medHour, medMinute, 0, 0);
+          
+          // Convert to UTC by creating a UTC date with the same moment
+          const targetTimeUTC = new Date(targetTimeUserTZ.toLocaleString('en-US', { timeZone: 'UTC' }));
+          
+          const utcHour = targetTimeUTC.getUTCHours();
+          const utcMinute = targetTimeUTC.getUTCMinutes();
+          
+          console.log(`  💊 ${med.name}: ${med.time} (${user.timezone}) = ${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} UTC | taken=${med.taken} | reminderSent=${med.reminderSent}`);
+          
+          // Check if it's time for this medication
+          const isTimeMatch = utcHour === currentUTCHour && utcMinute === currentUTCMinute;
+          const isDue = this.isMedicationDue(med, user.timezone);
+          
+          if (isTimeMatch && isDue) {
+            console.log(`  ✅ MATCH! Medication ${med.name} is due NOW`);
+            dueNow.push({ uid: userMeds.uid, medication: med, userTimezone: user.timezone });
+          }
+        } catch (error) {
+          console.error(`  ❌ Error converting time for ${med.name}:`, error);
         }
       }
+    }
+
+    if (dueNow.length > 0) {
+      console.log(`📬 Found ${dueNow.length} medication(s) due for reminders`);
     }
 
     return dueNow;
