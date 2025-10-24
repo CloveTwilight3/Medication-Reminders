@@ -1,4 +1,4 @@
-/** src/pwa/src/pages/Dashboard.tsx - UPDATED with notification fixes
+/** src/pwa/src/pages/Dashboard.tsx
  * @license MIT
  * Copyright (c) 2025 Clove Twilight
  * See LICENSE file in the root directory for full license text.
@@ -539,7 +539,7 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Add Medication Modal - SAME AS BEFORE */}
+      {/* Add Medication Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
@@ -652,7 +652,113 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Edit Modal - SAME AS BEFORE (truncated for space) */}
+      {/* Edit Medication Modal */}
+      {showEditModal && editingMed && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Edit Medication</h2>
+              <button
+                onClick={() => { setShowEditModal(false); setEditingMed(null); resetForm(); }}
+                className="text-gray-400 hover:text-gray-200"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 mb-6">
+              <p className="text-sm text-gray-300">
+                <span className="font-medium text-white">Editing:</span> {editingMed.name}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Note: You cannot change the medication name
+              </p>
+            </div>
+            <form onSubmit={handleEditMedication}>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Time *
+                  </label>
+                  <input
+                    type="time"
+                    value={newMedTime}
+                    onChange={(e) => setNewMedTime(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Frequency *
+                  </label>
+                  <select
+                    value={newMedFrequency}
+                    onChange={(e) => setNewMedFrequency(e.target.value as FrequencyType)}
+                    required
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  >
+                    {FREQUENCY_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Dose (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newMedDose}
+                    onChange={(e) => setNewMedDose(e.target.value)}
+                    placeholder="e.g., 10mg, 2 tablets"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Amount (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newMedAmount}
+                    onChange={(e) => setNewMedAmount(e.target.value)}
+                    placeholder="e.g., 1 pill, 5ml"
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Instructions (Optional)
+                  </label>
+                  <textarea
+                    value={newMedInstructions}
+                    onChange={(e) => setNewMedInstructions(e.target.value)}
+                    placeholder="e.g., Take with food"
+                    rows={3}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowEditModal(false); setEditingMed(null); resetForm(); }}
+                  className="flex-1 px-6 py-3 border border-gray-600 text-gray-300 font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Settings Modal */}
       {showSettings && (
