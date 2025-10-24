@@ -149,6 +149,13 @@ const commands = [
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
   
+  // /ping command
+  new SlashCommandBuilder()
+    .setName('ping')
+    .setDescription('Check the bot\'s responsiveness')
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
+  
   // /version command
   new SlashCommandBuilder()
     .setName('version')
@@ -156,7 +163,7 @@ const commands = [
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
-  // /timezone command with autocomplete - UPDATED
+  // /timezone command
   new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Set your timezone for accurate reminders')
@@ -165,7 +172,7 @@ const commands = [
         .setName('timezone')
         .setDescription('Your timezone (e.g., America/New_York, Europe/London)')
         .setRequired(true)
-        .setAutocomplete(true) // ✅ Enable autocomplete for timezone
+        .setAutocomplete(true)
     )
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),

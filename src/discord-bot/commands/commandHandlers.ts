@@ -311,11 +311,17 @@ export async function handleInvite(interaction: ChatInputCommandInteraction): Pr
 }
 
 export async function handleVersion(interaction: ChatInputCommandInteraction): Promise<void> {
-  const version = 'Public Test Beta v1.0.4';
+  const version = 'Public Test Beta v1.0.5';
   await interaction.reply({
     content: `💡 Medication Reminder Bot - Current Version: **${version}**`,
     flags: MessageFlags.Ephemeral,
   });
+}
+
+export async function handlePing(interaction: ChatInputCommandInteraction): Promise<void> {
+  const sent = await interaction.reply({ content: '🏓 Pinging...', fetchReply: true, flags: MessageFlags.Ephemeral });
+  const latency = sent.createdTimestamp - interaction.createdTimestamp;
+  await interaction.editReply(`🏓 Pong! Latency is **${latency}ms**.`);
 }
 
 export async function handleSupport(interaction: ChatInputCommandInteraction): Promise<void> {

@@ -130,7 +130,7 @@ export default function Welcome() {
               GitHub
             </a>
             <span>•</span>
-            <span className="text-primary-400 font-semibold">PTB v1.0.4</span>
+            <span className="text-primary-400 font-semibold">PTB v1.0.5</span>
           </div>
           <p className="text-gray-600 mt-4 text-xs">
             Cuddle Blahaj Medications • Never miss your meds
