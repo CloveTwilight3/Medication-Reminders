@@ -142,6 +142,20 @@ const commands = [
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
+  // /invite command
+  new SlashCommandBuilder()
+    .setName('invite')
+    .setDescription('Get an invite link to add the bot to your server')
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
+  
+  // /version command
+  new SlashCommandBuilder()
+    .setName('version')
+    .setDescription('Show the current version of the medication bot')
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
+
   // /timezone command with autocomplete - UPDATED
   new SlashCommandBuilder()
     .setName('timezone')

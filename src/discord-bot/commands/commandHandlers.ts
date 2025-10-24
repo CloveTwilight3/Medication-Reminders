@@ -7,6 +7,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { apiClient } from '../services/apiClient';
 import { FrequencyType } from '../../api/types';
+import e from 'express';
 
 const PWA_URL = process.env.PWA_URL || process.env.API_URL?.replace('/api', '') || 'https://www.cuddle-blahaj.win';
 
@@ -299,6 +300,22 @@ export async function handleTimezone(interaction: ChatInputCommandInteraction): 
       flags: MessageFlags.Ephemeral,
     });
   }
+}
+
+export async function handleInvite(interaction: ChatInputCommandInteraction): Promise<void> {
+  const inviteLink = 'https://www.cuddle-blahaj.win/auth-bot';
+  await interaction.reply({
+    content: `🤖 Invite the bot to your server or add to user using:\n${inviteLink}`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+export async function handleVersion(interaction: ChatInputCommandInteraction): Promise<void> {
+  const version = 'Public Test Beta v1.0.4';
+  await interaction.reply({
+    content: `💡 Medication Reminder Bot - Current Version: **${version}**`,
+    flags: MessageFlags.Ephemeral,
+  });
 }
 
 export async function handleSupport(interaction: ChatInputCommandInteraction): Promise<void> {
