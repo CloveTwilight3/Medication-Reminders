@@ -251,42 +251,45 @@ export class MedicationService {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
             hour12: false
           });
+          
           const parts = formatter.formatToParts(now);
           const tzYear = parseInt(parts.find(p => p.type === 'year')!.value);
           const tzMonth = parseInt(parts.find(p => p.type === 'month')!.value) - 1; // JS months are 0-indexed
           const tzDay = parseInt(parts.find(p => p.type === 'day')!.value);
           
-          // Step 2: Create a date string in a format that works cross-browser
-          // representing "today at medication time" in the user's timezone
-          const dateStr = `${tzYear}-${String(tzMonth + 1).padStart(2, '0')}-${String(tzDay).padStart(2, '0')}T${String(medHour).padStart(2, '0')}:${String(medMinute).padStart(2, '0')}:00`;
+          // Step 2: Create ISO string for this date at the medication time
+          const isoDateString = `${tzYear}-${String(tzMonth + 1).padStart(2, '0')}-${String(tzDay).padStart(2, '0')}T${String(medHour).padStart(2, '0')}:${String(medMinute).padStart(2, '0')}:00`;
           
-          // Step 3: Use a trick - format a known UTC time in the target timezone,
-          // then calculate the offset. This handles DST automatically!
-          // Create a date at midnight UTC
-          const testDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, 0, 0, 0));
+          // Step 3: Calculate timezone offset
+          // Compare the same moment in time as represented in UTC vs the user's timezone
+          const testDate = new Date();
+          const utcMillis = Date.parse(testDate.toLocaleString('en-US', { timeZone: 'UTC' }));
+          const tzMillis = Date.parse(testDate.toLocaleString('en-US', { timeZone: user.timezone }));
+          const offsetMs = utcMillis - tzMillis;
           
-          // Get how this UTC time appears in the user's timezone
-          const testInTZ = new Date(testDate.toLocaleString('en-US', { timeZone: user.timezone }));
-          
-          // Calculate offset in milliseconds (difference between UTC and user's TZ)
-          const offsetMs = testDate.getTime() - testInTZ.getTime();
-          
-          // Step 4: Create the medication time and apply the offset
-          const medTime = new Date(tzYear, tzMonth, tzDay, medHour, medMinute, 0);
-          const medTimeUTC = new Date(medTime.getTime() - offsetMs);
+          // Step 4: Apply offset to convert from user's timezone to UTC
+          // If we interpret the medication time as UTC (asIfUTC), we need to adjust it
+          const asIfUTC = new Date(isoDateString + 'Z');
+          const medTimeUTC = new Date(asIfUTC.getTime() + offsetMs);
           
           const utcHour = medTimeUTC.getUTCHours();
           const utcMinute = medTimeUTC.getUTCMinutes();
           
           // Calculate timezone offset to show in logs (helps with DST debugging)
+          // offsetMs is: (UTC time) - (TZ time)
+          // Negative offsetMs means TZ is ahead of UTC (e.g., BST is UTC+1, so -3600000ms)
+          // Positive offsetMs means TZ is behind UTC (e.g., EST is UTC-5, so +18000000ms)
           const offsetHours = Math.floor(Math.abs(offsetMs) / (1000 * 60 * 60));
           const offsetMins = Math.floor((Math.abs(offsetMs) % (1000 * 60 * 60)) / (1000 * 60));
-          const offsetSign = offsetMs >= 0 ? '+' : '-';
+          const offsetSign = offsetMs < 0 ? '+' : '-';
           const offsetStr = `UTC${offsetSign}${offsetHours}${offsetMins > 0 ? ':' + String(offsetMins).padStart(2, '0') : ''}`;
           
-          console.log(`  💊 ${med.name}: ${med.time} ${user.timezone} (${offsetStr}) = ${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} UTC | taken=${med.taken} | reminderSent=${med.reminderSent}`);
+          console.log(`  💊 ${med.name}: ${String(medHour).padStart(2, '0')}:${String(medMinute).padStart(2, '0')} ${user.timezone} (${offsetStr}) = ${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} UTC | taken=${med.taken} | reminderSent=${med.reminderSent}`);
           
           // Check if it's time for this medication
           const isTimeMatch = utcHour === currentUTCHour && utcMinute === currentUTCMinute;
