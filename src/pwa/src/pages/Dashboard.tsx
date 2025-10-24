@@ -1,4 +1,4 @@
-/** src/pwa/src/pages/Dashboard.tsx
+/** src/pwa/src/pages/Dashboard.tsx - COMPLETE with notification fixes
  * @license MIT
  * Copyright (c) 2025 Clove Twilight
  * See LICENSE file in the root directory for full license text.
@@ -66,7 +66,11 @@ export default function Dashboard() {
             const med = message.data as Medication;
             console.log('💊 Medication updated:', med);
             
-            if (!med.taken && notificationsEnabled) {
+            // CRITICAL FIX: Check localStorage directly to avoid stale closure
+            const currentlyEnabled = notificationService.areNotificationsEnabled();
+            console.log('🔔 Current notification status from localStorage:', currentlyEnabled);
+            
+            if (!med.taken && currentlyEnabled) {
               console.log('🔔 Attempting to show notification for medication:', med.name);
               notificationService.showMedicationReminder(
                 med.name,
@@ -78,7 +82,7 @@ export default function Dashboard() {
             } else {
               console.log('⏸️ Not showing notification:', {
                 taken: med.taken,
-                notificationsEnabled
+                notificationsEnabled: currentlyEnabled
               });
             }
           }
@@ -99,6 +103,11 @@ export default function Dashboard() {
   useEffect(() => {
     loadMedications();
     checkNotificationStatus();
+    
+    // CRITICAL FIX: Sync state with localStorage on mount
+    const savedEnabled = notificationService.areNotificationsEnabled();
+    setNotificationsEnabled(savedEnabled);
+    console.log('🔔 Synced notification state from localStorage:', savedEnabled);
   }, [uid]);
 
   useEffect(() => {
