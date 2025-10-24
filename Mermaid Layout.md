@@ -5,7 +5,7 @@
 %% See LICENSE file in the root directory for full license text.
 
 %% Medication Reminder System - Complete Workflow
-%% Version: PTB v1.0.3
+%% Version: PTB v1.0.4
 
 graph TB
     %% User Entry Points
