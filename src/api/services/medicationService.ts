@@ -243,22 +243,50 @@ export class MedicationService {
         // Parse medication time
         const [medHour, medMinute] = med.time.split(':').map(Number);
         
-        // Convert medication time from user's timezone to UTC
+        // Convert medication time from user's timezone to UTC (handles DST automatically)
         try {
-          // Create a date object in the user's timezone
-          const nowInUserTZ = new Date(now.toLocaleString('en-US', { timeZone: user.timezone }));
+          // Step 1: Get today's date in the user's timezone
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: user.timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour12: false
+          });
+          const parts = formatter.formatToParts(now);
+          const tzYear = parseInt(parts.find(p => p.type === 'year')!.value);
+          const tzMonth = parseInt(parts.find(p => p.type === 'month')!.value) - 1; // JS months are 0-indexed
+          const tzDay = parseInt(parts.find(p => p.type === 'day')!.value);
           
-          // Create the target time today in user's timezone
-          const targetTimeUserTZ = new Date(nowInUserTZ);
-          targetTimeUserTZ.setHours(medHour, medMinute, 0, 0);
+          // Step 2: Create a date string in a format that works cross-browser
+          // representing "today at medication time" in the user's timezone
+          const dateStr = `${tzYear}-${String(tzMonth + 1).padStart(2, '0')}-${String(tzDay).padStart(2, '0')}T${String(medHour).padStart(2, '0')}:${String(medMinute).padStart(2, '0')}:00`;
           
-          // Convert to UTC by creating a UTC date with the same moment
-          const targetTimeUTC = new Date(targetTimeUserTZ.toLocaleString('en-US', { timeZone: 'UTC' }));
+          // Step 3: Use a trick - format a known UTC time in the target timezone,
+          // then calculate the offset. This handles DST automatically!
+          // Create a date at midnight UTC
+          const testDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, 0, 0, 0));
           
-          const utcHour = targetTimeUTC.getUTCHours();
-          const utcMinute = targetTimeUTC.getUTCMinutes();
+          // Get how this UTC time appears in the user's timezone
+          const testInTZ = new Date(testDate.toLocaleString('en-US', { timeZone: user.timezone }));
           
-          console.log(`  💊 ${med.name}: ${med.time} (${user.timezone}) = ${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} UTC | taken=${med.taken} | reminderSent=${med.reminderSent}`);
+          // Calculate offset in milliseconds (difference between UTC and user's TZ)
+          const offsetMs = testDate.getTime() - testInTZ.getTime();
+          
+          // Step 4: Create the medication time and apply the offset
+          const medTime = new Date(tzYear, tzMonth, tzDay, medHour, medMinute, 0);
+          const medTimeUTC = new Date(medTime.getTime() - offsetMs);
+          
+          const utcHour = medTimeUTC.getUTCHours();
+          const utcMinute = medTimeUTC.getUTCMinutes();
+          
+          // Calculate timezone offset to show in logs (helps with DST debugging)
+          const offsetHours = Math.floor(Math.abs(offsetMs) / (1000 * 60 * 60));
+          const offsetMins = Math.floor((Math.abs(offsetMs) % (1000 * 60 * 60)) / (1000 * 60));
+          const offsetSign = offsetMs >= 0 ? '+' : '-';
+          const offsetStr = `UTC${offsetSign}${offsetHours}${offsetMins > 0 ? ':' + String(offsetMins).padStart(2, '0') : ''}`;
+          
+          console.log(`  💊 ${med.name}: ${med.time} ${user.timezone} (${offsetStr}) = ${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} UTC | taken=${med.taken} | reminderSent=${med.reminderSent}`);
           
           // Check if it's time for this medication
           const isTimeMatch = utcHour === currentUTCHour && utcMinute === currentUTCMinute;
