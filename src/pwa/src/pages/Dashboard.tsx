@@ -1,4 +1,4 @@
-/** src/pwa/src/pages/Dashboard.tsx - COMPLETE with notification fixes
+/** src/pwa/src/pages/Dashboard.tsx
  * @license MIT
  * Copyright (c) 2025 Clove Twilight
  * See LICENSE file in the root directory for full license text.
@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [newMedName, setNewMedName] = useState('');
   const [newMedTime, setNewMedTime] = useState('');
   const [newMedFrequency, setNewMedFrequency] = useState<FrequencyType>('daily');
+  const [newMedCustomDays, setNewMedCustomDays] = useState<number | undefined>(undefined); // 🔥 NEW
   const [newMedDose, setNewMedDose] = useState('');
   const [newMedAmount, setNewMedAmount] = useState('');
   const [newMedInstructions, setNewMedInstructions] = useState('');
@@ -251,6 +252,7 @@ export default function Dashboard() {
     setNewMedName('');
     setNewMedTime('');
     setNewMedFrequency('daily');
+    setNewMedCustomDays(undefined); // 🔥 NEW
     setNewMedDose('');
     setNewMedAmount('');
     setNewMedInstructions('');
@@ -260,12 +262,21 @@ export default function Dashboard() {
     e.preventDefault();
     if (!uid || !newMedName || !newMedTime) return;
 
+    // 🔥 NEW: Validate custom frequency
+    if (newMedFrequency === 'custom') {
+      if (!newMedCustomDays || newMedCustomDays < 1 || newMedCustomDays > 365) {
+        alert('Please enter a valid number of days between 1 and 365 for custom frequency');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       await api.createMedication(uid, {
         name: newMedName,
         time: newMedTime,
         frequency: newMedFrequency,
+        customDays: newMedFrequency === 'custom' ? newMedCustomDays : undefined, // 🔥 NEW
         dose: newMedDose || undefined,
         amount: newMedAmount || undefined,
         instructions: newMedInstructions || undefined,
@@ -284,11 +295,20 @@ export default function Dashboard() {
     e.preventDefault();
     if (!uid || !editingMed) return;
 
+    // 🔥 NEW: Validate custom frequency
+    if (newMedFrequency === 'custom') {
+      if (!newMedCustomDays || newMedCustomDays < 1 || newMedCustomDays > 365) {
+        alert('Please enter a valid number of days between 1 and 365 for custom frequency');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       await api.updateMedication(uid, editingMed.name, {
         time: newMedTime,
         frequency: newMedFrequency,
+        customDays: newMedFrequency === 'custom' ? newMedCustomDays : undefined, // 🔥 NEW
         dose: newMedDose || undefined,
         amount: newMedAmount || undefined,
         instructions: newMedInstructions || undefined,
@@ -308,6 +328,7 @@ export default function Dashboard() {
     setEditingMed(med);
     setNewMedTime(med.time);
     setNewMedFrequency(med.frequency);
+    setNewMedCustomDays(med.customDays); // 🔥 NEW
     setNewMedDose(med.dose || '');
     setNewMedAmount(med.amount || '');
     setNewMedInstructions(med.instructions || '');
@@ -363,7 +384,11 @@ export default function Dashboard() {
     }
   };
 
-  const getFrequencyLabel = (frequency: FrequencyType) => {
+  // 🔥 UPDATED: Now accepts customDays parameter
+  const getFrequencyLabel = (frequency: FrequencyType, customDays?: number) => {
+    if (frequency === 'custom' && customDays) {
+      return `Every ${customDays} day${customDays > 1 ? 's' : ''}`;
+    }
     return FREQUENCY_OPTIONS.find(f => f.value === frequency)?.label || frequency;
   };
 
@@ -484,7 +509,7 @@ export default function Dashboard() {
                           {med.time}
                         </span>
                         <span className="font-medium text-primary-400">
-                          {getFrequencyLabel(med.frequency)}
+                          {getFrequencyLabel(med.frequency, med.customDays)} {/* 🔥 UPDATED: Pass customDays */}
                         </span>
                       </div>
                       {(med.dose || med.amount || med.instructions) && (
@@ -594,7 +619,13 @@ export default function Dashboard() {
                   </label>
                   <select
                     value={newMedFrequency}
-                    onChange={(e) => setNewMedFrequency(e.target.value as FrequencyType)}
+                    onChange={(e) => {
+                      setNewMedFrequency(e.target.value as FrequencyType);
+                      // Reset customDays when changing away from custom
+                      if (e.target.value !== 'custom') {
+                        setNewMedCustomDays(undefined);
+                      }
+                    }}
                     required
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   >
@@ -603,6 +634,29 @@ export default function Dashboard() {
                     ))}
                   </select>
                 </div>
+
+                {/* 🔥 NEW: Custom Days Field - Only shown when frequency is 'custom' */}
+                {newMedFrequency === 'custom' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Days Between Doses *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={newMedCustomDays || ''}
+                      onChange={(e) => setNewMedCustomDays(parseInt(e.target.value) || undefined)}
+                      placeholder="e.g., 10 for every 10 days"
+                      required={newMedFrequency === 'custom'}
+                      className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter a number between 1 and 365 days
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Dose (Optional)
@@ -702,7 +756,13 @@ export default function Dashboard() {
                   </label>
                   <select
                     value={newMedFrequency}
-                    onChange={(e) => setNewMedFrequency(e.target.value as FrequencyType)}
+                    onChange={(e) => {
+                      setNewMedFrequency(e.target.value as FrequencyType);
+                      // Reset customDays when changing away from custom
+                      if (e.target.value !== 'custom') {
+                        setNewMedCustomDays(undefined);
+                      }
+                    }}
                     required
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   >
@@ -711,6 +771,29 @@ export default function Dashboard() {
                     ))}
                   </select>
                 </div>
+
+                {/* 🔥 NEW: Custom Days Field - Only shown when frequency is 'custom' */}
+                {newMedFrequency === 'custom' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Days Between Doses *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={newMedCustomDays || ''}
+                      onChange={(e) => setNewMedCustomDays(parseInt(e.target.value) || undefined)}
+                      placeholder="e.g., 10 for every 10 days"
+                      required={newMedFrequency === 'custom'}
+                      className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter a number between 1 and 365 days
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Dose (Optional)

@@ -72,6 +72,7 @@ class ApiClient {
       name: string;
       time: string;
       frequency: FrequencyType;
+      customDays?: number; // Added for custom frequency
       dose?: string;
       amount?: string;
       instructions?: string;
@@ -89,6 +90,7 @@ class ApiClient {
     updates: {
       time?: string;
       frequency?: FrequencyType;
+      customDays?: number; // Added for custom frequency
       dose?: string;
       amount?: string;
       instructions?: string;

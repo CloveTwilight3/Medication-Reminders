@@ -12,8 +12,17 @@ const FREQUENCY_DISPLAY: Record<FrequencyType, string> = {
   'every-2-days': 'Every 2 days',
   'weekly': 'Weekly',
   'bi-weekly': 'Bi-weekly',
-  'monthly': 'Monthly'
+  'monthly': 'Monthly',
+  'custom': 'Custom'
 };
+
+// Helper function to get display text for frequency including custom
+function getFrequencyDisplay(med: Medication): string {
+  if (med.frequency === 'custom' && med.customDays) {
+    return `Every ${med.customDays} day${med.customDays > 1 ? 's' : ''}`;
+  }
+  return FREQUENCY_DISPLAY[med.frequency] || med.frequency;
+}
 
 export async function sendMedicationReminder(
   client: Client,
@@ -28,7 +37,7 @@ export async function sendMedicationReminder(
       .setTitle('💊 Medication Reminder')
       .setDescription(`It's time to take your medication: **${med.name}**`)
       .addFields(
-        { name: 'Frequency', value: FREQUENCY_DISPLAY[med.frequency], inline: true },
+        { name: 'Frequency', value: getFrequencyDisplay(med), inline: true },
         { name: 'Time', value: med.time, inline: true }
       );
 
@@ -78,7 +87,7 @@ export async function sendFollowUpReminder(
       .setTitle('⚠️ Medication Reminder (Follow-up)')
       .setDescription(`You haven't marked **${med.name}** as taken yet. Please remember to take it!`)
       .addFields(
-        { name: 'Frequency', value: FREQUENCY_DISPLAY[med.frequency], inline: true }
+        { name: 'Frequency', value: getFrequencyDisplay(med), inline: true }
       );
 
     if (med.dose) {
