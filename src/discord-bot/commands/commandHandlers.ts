@@ -6,8 +6,7 @@
 
 import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { apiClient } from '../services/apiClient';
-import { FrequencyType } from '../../api/types';
-import e from 'express';
+import { FrequencyType, Medication } from '../../api/types';
 
 const PWA_URL = process.env.PWA_URL || process.env.API_URL?.replace('/api', '') || 'https://www.cuddle-blahaj.win';
 
@@ -16,8 +15,17 @@ const FREQUENCY_DISPLAY: Record<FrequencyType, string> = {
   'every-2-days': 'Every 2 days',
   'weekly': 'Weekly',
   'bi-weekly': 'Bi-weekly (every 2 weeks)',
-  'monthly': 'Monthly'
+  'monthly': 'Monthly',
+  'custom': 'Custom'
 };
+
+// Helper function to get display text for frequency including custom
+function getFrequencyDisplay(med: Medication): string {
+  if (med.frequency === 'custom' && med.customDays) {
+    return `Custom (every ${med.customDays} days)`;
+  }
+  return FREQUENCY_DISPLAY[med.frequency] || med.frequency;
+}
 
 // Main /med command handler that routes to subcommands
 export async function handleMedCommand(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -96,6 +104,7 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
   const medName = interaction.options.getString('name', true);
   const time = interaction.options.getString('time', true);
   const frequency = interaction.options.getString('frequency', true) as FrequencyType;
+  const customDays = interaction.options.getInteger('custom_days', false);
   const dose = interaction.options.getString('dose', false);
   const amount = interaction.options.getString('amount', false);
   const instructions = interaction.options.getString('instructions', false);
@@ -103,10 +112,29 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
   try {
     const user = await apiClient.getOrCreateUser(interaction.user.id);
 
+    // Validate custom frequency
+    if (frequency === 'custom') {
+      if (!customDays || customDays < 1) {
+        await interaction.reply({
+          content: '❌ For custom frequency, you must specify custom_days (minimum 1 day)',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+      if (customDays > 365) {
+        await interaction.reply({
+          content: '❌ Custom days cannot exceed 365 days',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+    }
+
     await apiClient.createMedication(user.uid, {
       name: medName,
       time,
       frequency,
+      customDays: frequency === 'custom' ? customDays! : undefined,
       dose: dose || undefined,
       amount: amount || undefined,
       instructions: instructions || undefined
@@ -117,7 +145,7 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
       .setTitle('✅ Medication Added')
       .setDescription(`Added **${medName}**`)
       .addFields(
-        { name: 'Frequency', value: FREQUENCY_DISPLAY[frequency], inline: true },
+        { name: 'Frequency', value: frequency === 'custom' ? `Custom (every ${customDays} days)` : FREQUENCY_DISPLAY[frequency], inline: true },
         { name: 'Time', value: `${time} (your timezone)`, inline: true }
       );
 
@@ -176,7 +204,7 @@ export async function handleListMeds(interaction: ChatInputCommandInteraction): 
         userMeds
           .map(med => {
             const status = med.taken ? '✅' : '⏳';
-            let line = `**${med.name}** - ${med.time} (${FREQUENCY_DISPLAY[med.frequency]}) ${status}`;
+            let line = `**${med.name}** - ${med.time} (${getFrequencyDisplay(med)}) ${status}`;
             if (med.dose) line += `\n  └ Dose: ${med.dose}`;
             if (med.amount) line += `\n  └ Amount: ${med.amount}`;
             if (med.instructions) line += `\n  └ Instructions: ${med.instructions}`;
@@ -213,6 +241,7 @@ export async function handleEditMed(interaction: ChatInputCommandInteraction): P
   const medName = interaction.options.getString('name', true);
   const time = interaction.options.getString('time', false);
   const frequency = interaction.options.getString('frequency', false) as FrequencyType | null;
+  const customDays = interaction.options.getInteger('custom_days', false);
   const dose = interaction.options.getString('dose', false);
   const amount = interaction.options.getString('amount', false);
   const instructions = interaction.options.getString('instructions', false);
@@ -220,10 +249,37 @@ export async function handleEditMed(interaction: ChatInputCommandInteraction): P
   try {
     const user = await apiClient.getOrCreateUser(interaction.user.id);
 
+    // Validate custom frequency
+    if (frequency === 'custom') {
+      if (!customDays || customDays < 1) {
+        await interaction.reply({
+          content: '❌ For custom frequency, you must specify custom_days (minimum 1 day)',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+      if (customDays > 365) {
+        await interaction.reply({
+          content: '❌ Custom days cannot exceed 365 days',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+    }
+
     // Build updates object
     const updates: any = {};
     if (time) updates.time = time;
-    if (frequency) updates.frequency = frequency;
+    if (frequency) {
+      updates.frequency = frequency;
+      if (frequency === 'custom') {
+        updates.customDays = customDays;
+      }
+    }
+    if (customDays !== null && !frequency) {
+      // Allow updating customDays independently if frequency isn't being changed
+      updates.customDays = customDays || undefined;
+    }
     if (dose !== null) updates.dose = dose || undefined;
     if (amount !== null) updates.amount = amount || undefined;
     if (instructions !== null) updates.instructions = instructions || undefined;
@@ -244,7 +300,10 @@ export async function handleEditMed(interaction: ChatInputCommandInteraction): P
       .setDescription(`Updated **${medName}**`);
 
     if (time) embed.addFields({ name: 'New Time', value: time, inline: true });
-    if (frequency) embed.addFields({ name: 'New Frequency', value: FREQUENCY_DISPLAY[frequency], inline: true });
+    if (frequency) {
+      const freqDisplay = frequency === 'custom' ? `Custom (every ${customDays} days)` : FREQUENCY_DISPLAY[frequency];
+      embed.addFields({ name: 'New Frequency', value: freqDisplay, inline: true });
+    }
     if (dose !== null) embed.addFields({ name: 'New Dose', value: dose || 'Removed', inline: true });
     if (amount !== null) embed.addFields({ name: 'New Amount', value: amount || 'Removed', inline: true });
     if (instructions !== null) embed.addFields({ name: 'New Instructions', value: instructions || 'Removed' });
@@ -355,7 +414,7 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
     .addFields(
       {
         name: '/med add',
-        value: 'Add a medication reminder with optional details\n*Required: name, time, frequency*\n*Optional: dose, amount, instructions*',
+        value: 'Add a medication reminder with optional details\n*Required: name, time, frequency*\n*Optional: dose, amount, instructions, custom_days (for custom frequency)*',
       },
       {
         name: '/med list',
@@ -383,8 +442,9 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
       }
     )
     .addFields({
-      name: '🆕 What\'s New in V2.5',
+      name: '🆕 What\'s New in ptb-v1.1.0',
       value:
+        '• **Custom Frequency**: Set custom intervals (e.g., every 10 days)\n' +
         '• **Subcommands**: All medication commands now use `/med` prefix\n' +
         '• **Autocomplete**: Start typing medication names in edit/remove commands\n' +
         '• **Dashboard Command**: Quick access to web interface with `/dashboard`\n' +
@@ -393,7 +453,7 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
     .addFields({
       name: '📬 Features',
       value:
-        '• **Multiple Frequencies**: Daily, every 2 days, weekly, bi-weekly, monthly\n' +
+        '• **Multiple Frequencies**: Daily, every 2 days, weekly, bi-weekly, monthly, custom\n' +
         '• **Optional Details**: Add dose, amount, and instructions\n' +
         '• **Timezone Support**: Reminders based on your timezone\n' +
         '• **Edit Medications**: Update time, frequency, and details\n' +

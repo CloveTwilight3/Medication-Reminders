@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS medications (
     uid VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     time VARCHAR(5) NOT NULL, -- HH:MM format
-    frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('daily', 'every-2-days', 'weekly', 'bi-weekly', 'monthly')),
+    frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('daily', 'every-2-days', 'weekly', 'bi-weekly', 'monthly', 'custom')),
+    custom_days INTEGER, -- For 'custom' frequency: number of days between doses
     dose VARCHAR(255),
     amount VARCHAR(255),
     instructions TEXT,
@@ -46,7 +47,9 @@ CREATE TABLE IF NOT EXISTS medications (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (uid) REFERENCES users(uid) ON DELETE CASCADE,
-    UNIQUE(uid, name)
+    UNIQUE(uid, name),
+    CHECK (frequency != 'custom' OR custom_days IS NOT NULL), -- custom_days required if frequency is 'custom'
+    CHECK (custom_days IS NULL OR (custom_days >= 1 AND custom_days <= 365)) -- custom_days must be 1-365 if provided
 );
 
 -- Create indexes for faster queries
@@ -83,6 +86,7 @@ SELECT
     m.name,
     m.time,
     m.frequency,
+    m.custom_days,
     m.dose,
     m.amount,
     m.instructions,

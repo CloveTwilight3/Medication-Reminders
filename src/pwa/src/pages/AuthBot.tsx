@@ -117,7 +117,7 @@ export default function AuthBot() {
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            Cuddle Blahaj Medications • Version PTB v1.0.5
+            Cuddle Blahaj Medications • Version PTB v1.1.0
           </p>
         </div>
       </div>

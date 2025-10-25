@@ -6,3 +6,5 @@ package-lock.json
 node_modules/
 .env
 data/
+pnpm-lock.yaml
+pnpm-workspace.yaml

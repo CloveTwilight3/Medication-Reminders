@@ -37,8 +37,17 @@ const commands = [
               { name: 'Every 2 Days', value: 'every-2-days' },
               { name: 'Weekly', value: 'weekly' },
               { name: 'Bi-weekly (Every 2 weeks)', value: 'bi-weekly' },
-              { name: 'Monthly', value: 'monthly' }
+              { name: 'Monthly', value: 'monthly' },
+              { name: 'Custom (specify days)', value: 'custom' }
             )
+        )
+        .addIntegerOption(option =>
+          option
+            .setName('custom_days')
+            .setDescription('For custom frequency: number of days between doses (e.g., 10 for every 10 days)')
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(365)
         )
         .addStringOption(option =>
           option
@@ -91,8 +100,17 @@ const commands = [
               { name: 'Every 2 Days', value: 'every-2-days' },
               { name: 'Weekly', value: 'weekly' },
               { name: 'Bi-weekly', value: 'bi-weekly' },
-              { name: 'Monthly', value: 'monthly' }
+              { name: 'Monthly', value: 'monthly' },
+              { name: 'Custom (specify days)', value: 'custom' }
             )
+        )
+        .addIntegerOption(option =>
+          option
+            .setName('custom_days')
+            .setDescription('For custom frequency: number of days between doses')
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(365)
         )
         .addStringOption(option =>
           option
@@ -195,14 +213,14 @@ export async function registerCommands(client: Client): Promise<void> {
   try {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
 
-    console.log('Started refreshing application (/) commands for V2.5 (subcommands + dashboard + timezone autocomplete).');
+    console.log('Started refreshing application (/) commands with custom frequency support.');
 
     await rest.put(
       Routes.applicationCommands(client.user!.id),
       { body: commands }
     );
 
-    console.log('✅ Successfully registered V2.5 commands with subcommands, /dashboard, and timezone autocomplete.');
+    console.log('✅ Successfully registered commands with custom frequency support.');
     console.log('ℹ️  Integration Types: GUILD_INSTALL (0), USER_INSTALL (1)');
     console.log('ℹ️  Contexts: GUILD (0), BOT_DM (1), PRIVATE_CHANNEL (2)');
   } catch (error) {

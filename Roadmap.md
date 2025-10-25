@@ -45,6 +45,6 @@ Added `/support` command to invite to the support server
 
 Fixed images on website, updated `src/pwa/index.html` to update the embed tags, fixed broken OAuth webflow. 
 
-# PTB v1.0.5
+# PTB v1.1.0
 
 Made vers consistant, added licening, added PWA notifs

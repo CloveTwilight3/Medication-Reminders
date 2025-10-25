@@ -15,6 +15,7 @@ interface DbMedication {
   name: string;
   time: string;
   frequency: string;
+  custom_days: number | null;
   dose: string | null;
   amount: string | null;
   instructions: string | null;
@@ -85,7 +86,8 @@ export class StorageService {
           uid VARCHAR(255) NOT NULL,
           name VARCHAR(255) NOT NULL,
           time VARCHAR(5) NOT NULL,
-          frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('daily', 'every-2-days', 'weekly', 'bi-weekly', 'monthly')),
+          frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('daily', 'every-2-days', 'weekly', 'bi-weekly', 'monthly', 'custom')),
+          custom_days INTEGER,
           dose VARCHAR(255),
           amount VARCHAR(255),
           instructions TEXT,
@@ -96,7 +98,9 @@ export class StorageService {
           created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (uid) REFERENCES users(uid) ON DELETE CASCADE,
-          UNIQUE(uid, name)
+          UNIQUE(uid, name),
+          CHECK (frequency != 'custom' OR custom_days IS NOT NULL),
+          CHECK (custom_days IS NULL OR (custom_days >= 1 AND custom_days <= 365))
         );
 
         CREATE INDEX IF NOT EXISTS idx_medications_uid ON medications(uid);
@@ -110,6 +114,7 @@ export class StorageService {
       name: row.name,
       time: row.time,
       frequency: row.frequency as any,
+      customDays: row.custom_days || undefined,
       dose: row.dose || undefined,
       amount: row.amount || undefined,
       instructions: row.instructions || undefined,
@@ -149,9 +154,9 @@ export class StorageService {
   ): Medication {
     const stmt = this.db.prepare(`
       INSERT INTO medications (
-        uid, name, time, frequency, dose, amount, instructions,
+        uid, name, time, frequency, custom_days, dose, amount, instructions,
         last_taken, next_due
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     try {
@@ -160,6 +165,7 @@ export class StorageService {
         medication.name,
         medication.time,
         medication.frequency,
+        medication.customDays || null,
         medication.dose || null,
         medication.amount || null,
         medication.instructions || null,
@@ -196,6 +202,10 @@ export class StorageService {
     if (updates.frequency !== undefined) {
       fields.push('frequency = ?');
       values.push(updates.frequency);
+    }
+    if (updates.customDays !== undefined) {
+      fields.push('custom_days = ?');
+      values.push(updates.customDays || null);
     }
     if (updates.dose !== undefined) {
       fields.push('dose = ?');

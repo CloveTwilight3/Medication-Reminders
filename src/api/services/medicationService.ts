@@ -22,11 +22,11 @@ export class MedicationService {
   }
 
   validateFrequency(frequency: string): frequency is FrequencyType {
-    return ['daily', 'every-2-days', 'weekly', 'bi-weekly', 'monthly'].includes(frequency);
+    return ['daily', 'every-2-days', 'weekly', 'bi-weekly', 'monthly', 'custom'].includes(frequency);
   }
 
   // Calculate next due date based on frequency
-  calculateNextDue(lastTaken: Date, frequency: FrequencyType): Date {
+  calculateNextDue(lastTaken: Date, frequency: FrequencyType, customDays?: number): Date {
     const next = new Date(lastTaken);
     
     switch (frequency) {
@@ -45,6 +45,12 @@ export class MedicationService {
       case 'monthly':
         next.setMonth(next.getMonth() + 1);
         break;
+      case 'custom':
+        if (!customDays || customDays < 1) {
+          throw new Error('customDays is required and must be at least 1 for custom frequency');
+        }
+        next.setDate(next.getDate() + customDays);
+        break;
     }
     
     return next;
@@ -59,7 +65,7 @@ export class MedicationService {
       return !med.taken;
     }
     
-    // For non-daily medications, check nextDue date
+    // For non-daily medications (including custom), check nextDue date
     if (med.nextDue) {
       return now >= new Date(med.nextDue) && !med.taken;
     }
@@ -69,7 +75,7 @@ export class MedicationService {
   }
 
   async createMedication(request: CreateMedicationRequest): Promise<Medication> {
-    const { uid, name, time, frequency, dose, amount, instructions } = request;
+    const { uid, name, time, frequency, customDays, dose, amount, instructions } = request;
 
     if (!name || !time || !frequency) {
       throw new Error('Name, time, and frequency are required');
@@ -80,7 +86,17 @@ export class MedicationService {
     }
 
     if (!this.validateFrequency(frequency)) {
-      throw new Error('Invalid frequency. Must be: daily, every-2-days, weekly, bi-weekly, or monthly');
+      throw new Error('Invalid frequency. Must be: daily, every-2-days, weekly, bi-weekly, monthly, or custom');
+    }
+
+    // Validate customDays for custom frequency
+    if (frequency === 'custom') {
+      if (!customDays || customDays < 1) {
+        throw new Error('customDays is required and must be at least 1 for custom frequency');
+      }
+      if (customDays > 365) {
+        throw new Error('customDays cannot exceed 365 days');
+      }
     }
 
     // Calculate initial nextDue for non-daily meds
@@ -96,6 +112,7 @@ export class MedicationService {
       name,
       time,
       frequency,
+      customDays: frequency === 'custom' ? customDays : undefined,
       dose,
       amount,
       instructions,
@@ -133,6 +150,16 @@ export class MedicationService {
     // Validate frequency if provided
     if (updates.frequency && !this.validateFrequency(updates.frequency)) {
       throw new Error('Invalid frequency');
+    }
+
+    // Validate customDays if frequency is custom
+    if (updates.frequency === 'custom') {
+      if (!updates.customDays || updates.customDays < 1) {
+        throw new Error('customDays is required and must be at least 1 for custom frequency');
+      }
+      if (updates.customDays > 365) {
+        throw new Error('customDays cannot exceed 365 days');
+      }
     }
 
     const medication = this.storage.updateMedication(uid, medName, updates);
@@ -180,7 +207,7 @@ export class MedicationService {
 
     // Calculate nextDue for non-daily medications
     if (med.frequency !== 'daily') {
-      updates.nextDue = this.calculateNextDue(now, med.frequency);
+      updates.nextDue = this.calculateNextDue(now, med.frequency, med.customDays);
     }
 
     const updatedMed = this.storage.updateMedication(uid, medName, updates);
@@ -289,7 +316,8 @@ export class MedicationService {
           const offsetSign = offsetMs < 0 ? '+' : '-';
           const offsetStr = `UTC${offsetSign}${offsetHours}${offsetMins > 0 ? ':' + String(offsetMins).padStart(2, '0') : ''}`;
           
-          console.log(`  💊 ${med.name}: ${String(medHour).padStart(2, '0')}:${String(medMinute).padStart(2, '0')} ${user.timezone} (${offsetStr}) = ${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} UTC | taken=${med.taken} | reminderSent=${med.reminderSent}`);
+          const freqDisplay = med.frequency === 'custom' ? `custom (every ${med.customDays} days)` : med.frequency;
+          console.log(`  💊 ${med.name}: ${String(medHour).padStart(2, '0')}:${String(medMinute).padStart(2, '0')} ${user.timezone} (${offsetStr}) = ${utcHour.toString().padStart(2, '0')}:${utcMinute.toString().padStart(2, '0')} UTC | freq=${freqDisplay} | taken=${med.taken} | reminderSent=${med.reminderSent}`);
           
           // Check if it's time for this medication
           const isTimeMatch = utcHour === currentUTCHour && utcMinute === currentUTCMinute;
@@ -323,7 +351,7 @@ export class MedicationService {
           med.reminderSent = false;
           med.updatedAt = new Date();
         } else {
-          // For non-daily meds, just reset reminderSent
+          // For non-daily meds (including custom), just reset reminderSent
           med.reminderSent = false;
           med.updatedAt = new Date();
         }

@@ -5,12 +5,13 @@
  */
 
 
-export type FrequencyType = 'daily' | 'every-2-days' | 'weekly' | 'bi-weekly' | 'monthly';
+export type FrequencyType = 'daily' | 'every-2-days' | 'weekly' | 'bi-weekly' | 'monthly' | 'custom';
 
 export interface Medication {
   name: string;
   time: string; // Format "HH:MM" in UTC
   frequency: FrequencyType;
+  customDays?: number; // For 'custom' frequency: number of days between doses (e.g., 10 for every 10 days)
   
   // Optional fields
   dose?: string; // e.g., "10mg", "2 tablets"
@@ -64,6 +65,7 @@ export interface CreateMedicationRequest {
   name: string;
   time: string;
   frequency: FrequencyType;
+  customDays?: number; // Required if frequency is 'custom'
   dose?: string;
   amount?: string;
   instructions?: string;
@@ -72,6 +74,7 @@ export interface CreateMedicationRequest {
 export interface UpdateMedicationRequest {
   time?: string;
   frequency?: FrequencyType;
+  customDays?: number; // Required if frequency is changed to 'custom'
   dose?: string;
   amount?: string;
   instructions?: string;
