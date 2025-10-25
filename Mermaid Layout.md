@@ -1,5 +1,4 @@
 ```mermaid
-
 %% @license MIT
 %% Copyright (c) 2025 Clove Twilight
 %% See LICENSE file in the root directory for full license text.
@@ -10,42 +9,49 @@
 graph TB
     %% User Entry Points
     subgraph Entry["🚪 User Entry Points"]
-        PWA[("🌐 PWA<br/>(Web Dashboard)")]
-        Discord[("💬 Discord Bot<br/>(Commands & DMs)")]
+        PWA[("🌐 PWA")]
+        Discord[("💬 Discord Bot")]
     end
 
     %% Authentication Flow
-    subgraph Auth["🔐 Authentication & Setup"]
+    subgraph Auth["🔐 Authentication"]
         OAuth["Discord OAuth 2.0"]
-        CreateUser["Create/Link User<br/>- Generate UID<br/>- Set Timezone<br/>- Link Discord ID"]
-        Session["Session Token<br/>(HTTP-only + WS cookies)"]
+        CreateUser["Create/Link User"]
+        Session["Session Tokens"]
     end
 
     %% Core API
-    subgraph API["⚙️ Core API Server (Express)"]
-        AuthAPI["Auth Controller<br/>- Login/Logout<br/>- Session Management"]
-        UserAPI["User Controller<br/>- Profile Settings<br/>- Timezone Updates"]
-        MedAPI["Medication Controller<br/>- CRUD Operations<br/>- Mark Taken/Not Taken"]
+    subgraph API["⚙️ API Server"]
+        AuthAPI["Auth Controller"]
+        UserAPI["User Controller"]
+        MedAPI["Med Controller"]
     end
 
     %% Data Storage
-    subgraph Storage["💾 Data Storage (SQLite)"]
-        UsersDB[("Users Table<br/>- UID<br/>- Discord ID<br/>- Timezone<br/>- Created Via")]
-        MedsDB[("Medications Table<br/>- Name, Time<br/>- Frequency<br/>- Taken Status<br/>- Next Due Date")]
-        SessionsDB[("Sessions Table<br/>- Token<br/>- UID<br/>- Expires At")]
+    subgraph Storage["💾 SQLite Database"]
+        UsersDB[("Users")]
+        MedsDB[("Medications")]
+        SessionsDB[("Sessions")]
     end
 
-    %% Real-time Communication
-    subgraph Realtime["⚡ Real-time Updates"]
-        WS["WebSocket Server<br/>(Port 3000/ws)"]
-        WSEvents["Events:<br/>- medication_added<br/>- medication_updated<br/>- medication_deleted"]
+    %% Real-time & Notifications
+    subgraph Realtime["⚡ Real-time"]
+        WS["WebSocket<br/>(Token Auth)"]
+        BrowserNotif["Browser Notifs"]
     end
 
     %% Scheduling System
-    subgraph Scheduler["⏰ Medication Scheduler"]
-        CronCheck["Cron Job<br/>(Every Minute)<br/>Check Due Medications"]
-        CronReset["Cron Job<br/>(Midnight UTC)<br/>Reset Daily Meds"]
-        SendReminder["Send Reminder<br/>- Discord DM<br/>- Follow-up (1hr later)"]
+    subgraph Scheduler["⏰ Scheduler"]
+        CronCheck["Check Due Meds<br/>(Every Minute)"]
+        CronReset["Reset Daily<br/>(Midnight UTC)"]
+        SendReminder["Send Reminders"]
+    end
+
+    %% Discord Commands
+    subgraph DiscordCommands["💬 Bot Commands"]
+        MedCmd["/med<br/>- add: Add medication<br/>- list: View all meds<br/>- edit: Update medication<br/>- remove: Delete medication"]
+        OtherCmd["Other Commands:<br/>- /dashboard: Open PWA<br/>- /timezone: Set timezone<br/>- /help: Show help<br/>- /support: Support server<br/>- /invite: Bot invite<br/>- /ping: Check latency<br/>- /version: Show version"]
+        Autocomplete["Autocomplete:<br/>- Medication names<br/>- Timezone suggestions"]
     end
 
     %% User Interactions Flow
@@ -55,16 +61,20 @@ graph TB
     CreateUser --> Session
     Session --> AuthAPI
 
-    %% Dashboard Operations
+    %% Dashboard & Bot Operations
     PWA -->|Authenticated| AuthAPI
     PWA -->|View/Manage Meds| MedAPI
     PWA -->|Update Settings| UserAPI
-    PWA <-->|Live Updates| WS
-
-    %% Discord Bot Operations
-    Discord -->|/med add/list/edit| MedAPI
-    Discord -->|/timezone| UserAPI
-    Discord -->|/dashboard| PWA
+    PWA <-->|Live Updates via ws_token| WS
+    PWA -->|Request Permission| BrowserNotif
+    
+    Discord -->|Commands| MedCmd
+    Discord -->|Utilities| OtherCmd
+    MedCmd -->|Autocomplete| Autocomplete
+    MedCmd -->|CRUD Operations| MedAPI
+    OtherCmd -->|Update Timezone| UserAPI
+    OtherCmd -->|Link to| PWA
+    Autocomplete -->|Fetch Data| MedAPI
 
     %% API to Storage
     AuthAPI --> SessionsDB
@@ -72,18 +82,19 @@ graph TB
     MedAPI --> MedsDB
     MedAPI --> UsersDB
 
-    %% WebSocket Flow
+    %% Real-time Flow
     MedAPI -->|Notify Change| WS
     WS -->|Push Update| PWA
+    WS -->|Trigger| BrowserNotif
 
     %% Scheduler Flow
     CronCheck -->|Query| MedsDB
-    CronCheck -->|Get User| UsersDB
-    CronCheck -->|Convert Timezone| SendReminder
+    CronCheck -->|Get User Info| UsersDB
+    CronCheck -->|Convert Timezone<br/>Handle DST| SendReminder
     SendReminder -->|Discord DM| Discord
     SendReminder -->|Update Status| MedsDB
-    
-    CronReset -->|Reset taken=false| MedsDB
+    SendReminder -->|Trigger| BrowserNotif
+    CronReset -->|Reset taken & reminder flags| MedsDB
 
     %% Visual Styling
     classDef entryPoint fill:#5865F2,stroke:#4752C4,stroke-width:3px,color:#fff
@@ -92,11 +103,13 @@ graph TB
     classDef storage fill:#EB459E,stroke:#D84A7F,stroke-width:2px,color:#fff
     classDef realtime fill:#00D9FF,stroke:#00B8D4,stroke-width:2px,color:#000
     classDef scheduler fill:#F26522,stroke:#D94F1C,stroke-width:2px,color:#fff
+    classDef commands fill:#3498DB,stroke:#2980B9,stroke-width:2px,color:#fff
 
     class PWA,Discord entryPoint
     class OAuth,CreateUser,Session auth
     class AuthAPI,UserAPI,MedAPI api
     class UsersDB,MedsDB,SessionsDB storage
-    class WS,WSEvents realtime
+    class WS,BrowserNotif realtime
     class CronCheck,CronReset,SendReminder scheduler
+    class MedCmd,OtherCmd,Autocomplete commands
 ```
