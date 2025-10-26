@@ -75,7 +75,8 @@ export class MedicationService {
   }
 
   async createMedication(request: CreateMedicationRequest): Promise<Medication> {
-    const { uid, name, time, frequency, customDays, dose, amount, instructions } = request;
+    const { uid, name, time, frequency, dose, amount, instructions } = request;
+    let { customDays } = request;
 
     if (!name || !time || !frequency) {
       throw new Error('Name, time, and frequency are required');
@@ -89,9 +90,15 @@ export class MedicationService {
       throw new Error('Invalid frequency. Must be: daily, every-2-days, weekly, bi-weekly, monthly, or custom');
     }
 
-    // Validate customDays for custom frequency
+    // 🔥 FIX: Validate customDays for custom frequency with better type checking
     if (frequency === 'custom') {
-      if (!customDays || customDays < 1) {
+      // Convert to number if it's a string
+      if (typeof customDays === 'string') {
+        customDays = parseInt(customDays, 10);
+      }
+      
+      // Now validate as a number
+      if (customDays === undefined || customDays === null || isNaN(customDays) || customDays < 1) {
         throw new Error('customDays is required and must be at least 1 for custom frequency');
       }
       if (customDays > 365) {
@@ -152,14 +159,25 @@ export class MedicationService {
       throw new Error('Invalid frequency');
     }
 
-    // Validate customDays if frequency is custom
+    // 🔥 FIX: Validate customDays if frequency is custom with better type checking
     if (updates.frequency === 'custom') {
-      if (!updates.customDays || updates.customDays < 1) {
+      let customDays = updates.customDays;
+      
+      // Convert to number if it's a string
+      if (typeof customDays === 'string') {
+        customDays = parseInt(customDays, 10);
+      }
+      
+      // Now validate as a number
+      if (customDays === undefined || customDays === null || isNaN(customDays) || customDays < 1) {
         throw new Error('customDays is required and must be at least 1 for custom frequency');
       }
-      if (updates.customDays > 365) {
+      if (customDays > 365) {
         throw new Error('customDays cannot exceed 365 days');
       }
+      
+      // Update the value with the converted number
+      updates.customDays = customDays;
     }
 
     const medication = this.storage.updateMedication(uid, medName, updates);

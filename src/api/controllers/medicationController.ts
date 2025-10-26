@@ -53,12 +53,32 @@ export class MedicationController {
     try {
       const { uid } = req.params;
       const { name, time, frequency, dose, amount, instructions } = req.body;
+      let { customDays } = req.body;
+      
+      // 🔥 FIX: Ensure customDays is a number if provided
+      if (customDays !== undefined && customDays !== null) {
+        if (typeof customDays === 'string') {
+          customDays = parseInt(customDays, 10);
+        } else {
+          customDays = Number(customDays);
+        }
+        
+        // If conversion failed, customDays will be NaN
+        if (isNaN(customDays)) {
+          res.status(400).json({
+            success: false,
+            error: 'customDays must be a valid number'
+          });
+          return;
+        }
+      }
       
       const medication = await medicationService.createMedication({
         uid,
         name,
         time,
         frequency,
+        customDays,
         dose,
         amount,
         instructions
@@ -80,6 +100,24 @@ export class MedicationController {
     try {
       const { uid, medName } = req.params;
       const updates = req.body;
+      
+      // 🔥 FIX: Ensure customDays is a number if provided
+      if (updates.customDays !== undefined && updates.customDays !== null) {
+        if (typeof updates.customDays === 'string') {
+          updates.customDays = parseInt(updates.customDays, 10);
+        } else {
+          updates.customDays = Number(updates.customDays);
+        }
+        
+        // If conversion failed, customDays will be NaN
+        if (isNaN(updates.customDays)) {
+          res.status(400).json({
+            success: false,
+            error: 'customDays must be a valid number'
+          });
+          return;
+        }
+      }
       
       const medication = await medicationService.updateMedication(uid, medName, updates);
       
