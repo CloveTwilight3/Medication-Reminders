@@ -6,6 +6,7 @@
 
 import { Client, Interaction, EmbedBuilder, MessageFlags, AutocompleteInteraction } from 'discord.js';
 import { apiClient } from '../services/apiClient';
+import { errorService } from '../services/errorService';
 import {
   handleMedCommand,
   handleDashboard,
@@ -54,6 +55,16 @@ const TIMEZONE_OPTIONS = [
   'UTC'
 ];
 
+// Helper function to create error embed
+function createErrorEmbed(errorMessage: string, errorHash: string): EmbedBuilder {
+  return new EmbedBuilder()
+    .setColor(0xED4245) // Red color for errors
+    .setTitle('❌ Error')
+    .setDescription(errorMessage)
+    .setFooter({ text: `Error: ${errorHash}` })
+    .setTimestamp();
+}
+
 export async function handleInteraction(
   interaction: Interaction,
   client: Client
@@ -101,14 +112,26 @@ export async function handleInteraction(
     } catch (error) {
       console.error('Error handling command:', error);
 
+      // Log the error with hash
+      const errorHash = errorService.logError(
+        interaction, 
+        error as Error,
+        { commandName: interaction.commandName }
+      );
+
+      const errorEmbed = createErrorEmbed(
+        'An error occurred while processing your command.',
+        errorHash
+      );
+
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
-          content: '❌ An error occurred while processing your command.',
+          embeds: [errorEmbed],
           flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
-          content: '❌ An error occurred while processing your command.',
+          embeds: [errorEmbed],
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -122,14 +145,29 @@ export async function handleInteraction(
     } catch (error) {
       console.error('Error handling button:', error);
 
+      // Log the error with hash
+      const errorHash = errorService.logError(
+        interaction as any,
+        error as Error,
+        { 
+          buttonId: interaction.customId,
+          messageId: interaction.message.id
+        }
+      );
+
+      const errorEmbed = createErrorEmbed(
+        'An error occurred while processing your action.',
+        errorHash
+      );
+
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
-          content: '❌ An error occurred while processing your action.',
+          embeds: [errorEmbed],
           flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
-          content: '❌ An error occurred while processing your action.',
+          embeds: [errorEmbed],
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -171,7 +209,7 @@ async function handleAutocomplete(interaction: AutocompleteInteraction): Promise
       return;
     }
 
-    // ✅ Handle /timezone autocomplete
+    // Handle /timezone autocomplete
     if (commandName === 'timezone' && focusedOption.name === 'timezone') {
       const focusedValue = focusedOption.value.toLowerCase();
       
@@ -225,8 +263,17 @@ async function handleButtonInteraction(interaction: Interaction): Promise<void> 
 
       await interaction.update({ embeds: [embed], components: [] });
     } catch (error) {
+      const errorHash = errorService.logError(
+        interaction as any,
+        error as Error,
+        { action: 'take', medName }
+      );
+      const errorEmbed = createErrorEmbed(
+        'Could not find this medication in your list.',
+        errorHash
+      );
       await interaction.reply({
-        content: '❌ Could not find this medication in your list.',
+        embeds: [errorEmbed],
         flags: MessageFlags.Ephemeral,
       });
     }

@@ -6,6 +6,7 @@
 
 import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { apiClient } from '../services/apiClient';
+import { errorService } from '../services/errorService';
 import { FrequencyType, Medication } from '../../api/types';
 
 const PWA_URL = process.env.PWA_URL || process.env.API_URL?.replace('/api', '') || 'https://www.cuddle-blahaj.win';
@@ -25,6 +26,16 @@ function getFrequencyDisplay(med: Medication): string {
     return `Custom (every ${med.customDays} days)`;
   }
   return FREQUENCY_DISPLAY[med.frequency] || med.frequency;
+}
+
+// Helper function to create error embed
+function createErrorEmbed(errorMessage: string, errorHash: string): EmbedBuilder {
+  return new EmbedBuilder()
+    .setColor(0xED4245) // Red color for errors
+    .setTitle('❌ Error')
+    .setDescription(errorMessage)
+    .setFooter({ text: `Error: ${errorHash}` })
+    .setTimestamp();
 }
 
 // Main /med command handler that routes to subcommands
@@ -93,8 +104,13 @@ export async function handleDashboard(interaction: ChatInputCommandInteraction):
     });
   } catch (error) {
     console.error('Error handling dashboard command:', error);
+    const errorHash = errorService.logError(interaction, error as Error);
+    const errorEmbed = createErrorEmbed(
+      `Failed to load dashboard link. Please visit: ${PWA_URL}`,
+      errorHash
+    );
     await interaction.reply({
-      content: `❌ Failed to load dashboard link. Please visit: ${PWA_URL}`,
+      embeds: [errorEmbed],
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -161,8 +177,18 @@ export async function handleAddMed(interaction: ChatInputCommandInteraction): Pr
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to add medication';
+    const errorHash = errorService.logError(interaction, error as Error, {
+      medName,
+      time,
+      frequency,
+      customDays,
+      dose,
+      amount,
+      instructions
+    });
+    const errorEmbed = createErrorEmbed(errorMessage, errorHash);
     await interaction.reply({
-      content: `❌ ${errorMessage}`,
+      embeds: [errorEmbed],
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -230,8 +256,10 @@ export async function handleListMeds(interaction: ChatInputCommandInteraction): 
       flags: MessageFlags.Ephemeral
     });
   } catch (error) {
+    const errorHash = errorService.logError(interaction, error as Error);
+    const errorEmbed = createErrorEmbed('Failed to retrieve your medications.', errorHash);
     await interaction.reply({
-      content: '❌ Failed to retrieve your medications.',
+      embeds: [errorEmbed],
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -314,8 +342,18 @@ export async function handleEditMed(interaction: ChatInputCommandInteraction): P
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to update medication';
+    const errorHash = errorService.logError(interaction, error as Error, {
+      medName,
+      time,
+      frequency,
+      customDays,
+      dose,
+      amount,
+      instructions
+    });
+    const errorEmbed = createErrorEmbed(errorMessage, errorHash);
     await interaction.reply({
-      content: `❌ ${errorMessage}`,
+      embeds: [errorEmbed],
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -334,8 +372,10 @@ export async function handleRemoveMed(interaction: ChatInputCommandInteraction):
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Medication not found';
+    const errorHash = errorService.logError(interaction, error as Error, { medName });
+    const errorEmbed = createErrorEmbed(errorMessage, errorHash);
     await interaction.reply({
-      content: `❌ ${errorMessage}`,
+      embeds: [errorEmbed],
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -354,8 +394,13 @@ export async function handleTimezone(interaction: ChatInputCommandInteraction): 
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to update timezone';
+    const errorHash = errorService.logError(interaction, error as Error, { timezone });
+    const errorEmbed = createErrorEmbed(
+      `${errorMessage}\n\nPlease use a valid timezone like: America/New_York, Europe/London, Asia/Tokyo`,
+      errorHash
+    );
     await interaction.reply({
-      content: `❌ ${errorMessage}\n\nPlease use a valid timezone like: America/New_York, Europe/London, Asia/Tokyo`,
+      embeds: [errorEmbed],
       flags: MessageFlags.Ephemeral,
     });
   }
