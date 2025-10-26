@@ -4,7 +4,7 @@
  * See LICENSE file in the root directory for full license text.
  */
 
-export type FrequencyType = 'daily' | 'every-2-days' | 'weekly' | 'bi-weekly' | 'monthly';
+export type FrequencyType = 'daily' | 'every-2-days' | 'weekly' | 'bi-weekly' | 'monthly' | 'custom';
 
 export interface User {
   uid: string;
@@ -18,6 +18,7 @@ export interface Medication {
   name: string;
   time: string;
   frequency: FrequencyType;
+  customDays?: number; // For 'custom' frequency: number of days between doses
   dose?: string;
   amount?: string;
   instructions?: string;
@@ -49,7 +50,8 @@ export const FREQUENCY_OPTIONS: { value: FrequencyType; label: string }[] = [
   { value: 'every-2-days', label: 'Every 2 Days' },
   { value: 'weekly', label: 'Weekly' },
   { value: 'bi-weekly', label: 'Bi-weekly (Every 2 Weeks)' },
-  { value: 'monthly', label: 'Monthly' }
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'custom', label: 'Custom (Specify Days)' }
 ];
 
 export const TIMEZONE_OPTIONS = [
