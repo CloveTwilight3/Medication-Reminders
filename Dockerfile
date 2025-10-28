@@ -4,7 +4,7 @@
 # See LICENSE file in the root directory for full license text.
 
 # Use Ubuntu base image
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
