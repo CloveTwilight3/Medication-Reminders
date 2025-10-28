@@ -213,16 +213,16 @@ export async function registerCommands(client: Client): Promise<void> {
   try {
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
 
-    console.log('Started refreshing application (/) commands with custom frequency support.');
+    console.log('[DEBUG] 🔃 Started refreshing application (/) commands');
 
     await rest.put(
       Routes.applicationCommands(client.user!.id),
       { body: commands }
     );
 
-    console.log('✅ Successfully registered commands with custom frequency support.');
-    console.log('ℹ️  Integration Types: GUILD_INSTALL (0), USER_INSTALL (1)');
-    console.log('ℹ️  Contexts: GUILD (0), BOT_DM (1), PRIVATE_CHANNEL (2)');
+    console.log('[DEBUG] ✅ Successfully registered commands');
+    console.log('[DEBUG] ℹ️  Integration Types: GUILD_INSTALL (0), USER_INSTALL (1)');
+    console.log('[DEBUG] ℹ️  Contexts: GUILD (0), BOT_DM (1), PRIVATE_CHANNEL (2)');
   } catch (error) {
     console.error('Error registering commands:', error);
   }

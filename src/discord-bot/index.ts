@@ -12,6 +12,16 @@ import { setupScheduler } from './services/scheduler';
 
 dotenv.config();
 
+const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const GUILD_ID = process.env.DISCORD_GUILD_ID;
+
+console.log('[DEBUG] 🔃 Starting loading bot');
+console.log('[DEBUG] Environment variables:');
+console.log('BOT_TOKEN:', TOKEN ? '✓ Set' : '✗ Not set');
+console.log('CLIENT_ID:', CLIENT_ID ? '✓ Set' : '✗ Not set');
+console.log('GUILD_ID:', GUILD_ID ? '✓ Set (optional)' : '✗ Not set (optional)');
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -20,7 +30,7 @@ const client = new Client({
 });
 
 client.once('clientReady', async () => {
-  console.log(`✅ Bot is ready! Logged in as ${client.user?.tag}`);
+  console.log(`[DEBUG] ✅ Bot is ready! Logged in as ${client.user?.tag}`);
   
   // Register slash commands
   await registerCommands(client);
@@ -34,4 +44,6 @@ client.on('interactionCreate', async (interaction) => {
   await handleInteraction(interaction, client);
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(TOKEN).catch(err => {
+  console.error('[ERROR] ❌ Failed to login:', err);
+} );
