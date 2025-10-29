@@ -451,6 +451,29 @@ export async function handleSupport(interaction: ChatInputCommandInteraction): P
   });
 }
 
+export async function handleGitHub(interaction: ChatInputCommandInteraction): Promise<void> {
+  const githubLink = 'https://github.com/CloveTwilight/Cuddle-Blahaj-Medication';
+  const embed = new EmbedBuilder()
+    .setColor(0x5865F2)
+    .setTitle('🐙 GitHub Repository')
+    .setDescription('Check out the source code for the Medication Reminder Bot on GitHub!')
+    .setFooter({ text: 'Open source and community-driven!' })
+    .setTimestamp(); 
+  const row = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setLabel('View on GitHub')
+        .setStyle(ButtonStyle.Link)
+        .setURL(githubLink)
+        .setEmoji('🐙')
+    );
+  await interaction.reply({
+    embeds: [embed],
+    components: [row],
+    flags: MessageFlags.Ephemeral
+  });
+}
+
 export async function handleHelp(interaction: ChatInputCommandInteraction): Promise<void> {
   const embed = new EmbedBuilder()
     .setColor(0x5865F2)
@@ -487,7 +510,7 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
       }
     )
     .addFields({
-      name: '🆕 What\'s New in ptb-v1.1.0',
+      name: '🆕 What\'s New in ptb-v1.1.3',
       value:
         '• **Custom Frequency**: Set custom intervals (e.g., every 10 days)\n' +
         '• **Subcommands**: All medication commands now use `/med` prefix\n' +
@@ -505,7 +528,7 @@ export async function handleHelp(interaction: ChatInputCommandInteraction): Prom
         '• **DM Reminders**: Receive notifications at scheduled times\n' +
         `• **Web Dashboard**: Manage medications at ${PWA_URL}`,
     })
-    .setFooter({ text: 'Stay healthy! 💙 | Version 2.5' });
+    .setFooter({ text: 'Stay healthy! 💙 | Version PTB 1.1.3' });
 
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(

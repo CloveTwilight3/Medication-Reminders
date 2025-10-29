@@ -195,6 +195,13 @@ const commands = [
     .setDMPermission(true)
     .setDefaultMemberPermissions(null),
 
+  // /github command
+  new SlashCommandBuilder()
+    .setName('github')
+    .setDescription('Get the GitHub repository link for the medication bot')
+    .setDMPermission(true)
+    .setDefaultMemberPermissions(null),
+
   // /help command
   new SlashCommandBuilder()
     .setName('help')

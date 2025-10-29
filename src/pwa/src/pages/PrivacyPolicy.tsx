@@ -190,7 +190,7 @@ export default function PrivacyPolicy() {
               <p className="leading-relaxed">
                 If you have questions about this Privacy Policy, please contact us through our{' '}
                 <a 
-                  href="https://github.com/clovetwilight3/medication-reminders" 
+                  href="https://github.com/clovetwilight3/cuddle-blahaj-medication" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary-400 hover:text-primary-300 underline"

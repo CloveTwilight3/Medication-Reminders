@@ -15,7 +15,8 @@ import {
   handleSupport,
   handleInvite,
   handleVersion,
-  handlePing
+  handlePing,
+  handleGitHub
 } from '../commands/commandHandlers';
 
 const pendingReminders = new Map<string, NodeJS.Timeout>();
@@ -102,6 +103,9 @@ export async function handleInteraction(
           break;
         case 'ping':
           await handlePing(interaction);
+          break;
+        case 'github':
+          await handleGitHub(interaction);
           break;
         default:
           await interaction.reply({

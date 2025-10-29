@@ -1,6 +1,6 @@
 {
   "name": "medication-reminders",
-  "version": "ptb-v1.1.0",
+  "version": "ptb-v1.1.3",
   "description": "Medication reminder system with Discord bot, REST API, PWA, and real-time WebSocket updates - V2.5 with SQL storage",
   "main": "dist/api/index.js",
   "workspaces": [

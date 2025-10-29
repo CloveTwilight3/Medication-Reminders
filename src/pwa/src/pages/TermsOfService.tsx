@@ -107,7 +107,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">10. Contact Information</h2>
               <p className="leading-relaxed">
-                For questions about these Terms, please contact us through our <a href="https://github.com/clovetwilight3/medication-reminders" target="_blank" rel="noopener noreferrer" className="text-primary-400 hover:text-primary-300 underline">GitHub repository</a> or Discord support server.
+                For questions about these Terms, please contact us through our <a href="https://github.com/clovetwilight3/cuddle-blahaj-medication" target="_blank" rel="noopener noreferrer" className="text-primary-400 hover:text-primary-300 underline">GitHub repository</a> or Discord support server.
               </p>
             </section>
 

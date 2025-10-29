@@ -122,7 +122,7 @@ export default function Welcome() {
             </Link>
             <span>•</span>
             <a 
-              href="https://github.com/clovetwilight3/medication-reminders" 
+              href="https://github.com/clovetwilight3/cuddle-blahaj-medication" 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:text-primary-400 transition-colors"
@@ -130,7 +130,7 @@ export default function Welcome() {
               GitHub
             </a>
             <span>•</span>
-            <span className="text-primary-400 font-semibold">PTB v1.1.0</span>
+            <span className="text-primary-400 font-semibold">PTB v1.1.3</span>
           </div>
           <p className="text-gray-600 mt-4 text-xs">
             Cuddle Blahaj Medications • Never miss your meds
