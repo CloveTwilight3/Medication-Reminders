@@ -32,10 +32,10 @@ COPY src/pwa/tailwind.config.js ./src/pwa/
 COPY src/pwa/postcss.config.js ./src/pwa/
 
 # Install root dependencies
-RUN npm install --include=dev
+RUN npm install --include=dev --legacy-peer-deps
 
 # Install PWA dependencies
-RUN cd src/pwa && npm install --include=dev
+RUN cd src/pwa && npm install --include=dev --legacy-peer-deps
 
 # Copy all source code
 COPY src ./src
